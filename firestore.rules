@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Public read collections (tasks, settings, banners, promo codes metadata)
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if false; // Only admin backend can modify global settings
+    }
+
+    match /tasks/{taskId} {
+      allow read: if true;
+      allow write: if false; // Only admin backend can create/edit tasks & quotas
+    }
+
+    match /promo_codes/{code} {
+      allow read: if false; // Protected: only backend can inspect & redeem
+      allow write: if false; // Only admin backend can create/delete promo codes
+    }
+
+    // Users Collection - Anti-tamper rules
+    match /users/{userId} {
+      // Allow reading user document (for client-side profile render)
+      allow read: if true;
+      
+      // CRITICAL: Block direct client-side writes to balance, loan, and referrals!
+      // All balance increments, deductions, and loan repayments MUST go through
+      // the Node.js backend using Firebase Admin SDK!
+      allow create: if false; // Created via backend /api/auth/telegram
+      allow update: if false; // Updated strictly via backend transactions
+      allow delete: if false;
+    }
+
+    // Activity log - Client can read their own logs
+    match /activities/{activityId} {
+      allow read: if true;
+      allow create: if false; // Created via backend
+      allow update, delete: if false;
+    }
+
+    // Deposits - Client can submit a pending deposit request
+    match /deposits/{depositId} {
+      allow read: if true;
+      allow create: if request.resource.data.status == 'pending'
+                    && request.resource.data.amount is number
+                    && request.resource.data.amount > 0
+                    && request.resource.data.trxId is string
+                    && request.resource.data.trxId.size() > 3;
+      allow update: if false; // Approval strictly done via backend Admin SDK
+      allow delete: if false;
+    }
+
+    // Withdrawals - Only backend Admin SDK can write / update status
+    match /withdrawals/{withdrawalId} {
+      allow read: if true;
+      allow create: if false; // Must be queued via backend /api/withdraw/request
+      allow update, delete: if false; // Only backend admin can mark paid or refund
+    }
+
+    // Task Submissions - Client can submit pending proofs
+    match /task_submissions/{subId} {
+      allow read: if true;
+      allow create: if request.resource.data.status == 'pending'
+                    && request.resource.data.proofImage is string
+                    && request.resource.data.taskId is string;
+      allow update, delete: if false; // Approved via backend admin
+    }
+
+    // Reports & Disputes - Client can submit complaints
+    match /reports/{reportId} {
+      allow read: if true;
+      allow create: if request.resource.data.status == 'pending'
+                    && request.resource.data.message is string
+                    && request.resource.data.message.size() >= 8;
+      allow update, delete: if false; // Handled via backend
+    }
+
+    // Admin audit logs - Read only, written by backend
+    match /admin_logs/{logId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

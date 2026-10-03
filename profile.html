@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Royal Time - Profile</title>
+  
+  <!-- Telegram WebApp Script -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Premium Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Confetti Script -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            royal: ['Cinzel', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            gold: {
+              100: '#FFFDEB',
+              200: '#FDEFB4',
+              300: '#F9DD78',
+              400: '#F3C544',
+              500: '#D4AF37',
+              600: '#AA820A',
+              700: '#7F6000',
+            },
+            royalDark: '#08080B',
+            royalCard: '#121319',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .gold-metallic-bg { background: linear-gradient(135deg, #FDECA6 0%, #D4AF37 38%, #936C0A 75%, #F7E493 100%); }
+    .royal-glow { box-shadow: 0 4px 25px rgba(212, 175, 55, 0.22); }
+    @keyframes royalShimmer {
+      0% { transform: translateX(-150%) skewX(-25deg); }
+      40% { transform: translateX(150%) skewX(-25deg); }
+      100% { transform: translateX(150%) skewX(-25deg); }
+    }
+    .shimmer-active { position: relative; overflow: hidden; }
+    .shimmer-active::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(60deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+      animation: royalShimmer 4s infinite;
+      pointer-events: none;
+    }
+    html, body { overflow-x: hidden; max-width: 100%; user-select: none; }
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+
+<body class="bg-[#030305] text-gray-200 font-sans flex justify-center min-h-screen">
+
+  <div id="royal-toast" class="fixed top-3 left-1/2 -translate-x-1/2 z-[250] transition-all duration-300 ease-out pointer-events-none opacity-0 -translate-y-8">
+    <div class="px-4 py-2 rounded-full bg-[#121319]/95 border border-gold-500/40 backdrop-blur-xl shadow-2xl flex items-center gap-2 text-xs text-gold-200 font-sans whitespace-nowrap">
+      <span class="w-2 h-2 rounded-full bg-gold-400 animate-ping"></span>
+      <i id="toast-icon" class="fa-solid fa-circle-check text-gold-400 text-xs"></i>
+      <span id="toast-msg" class="font-semibold tracking-wide">Action Successful</span>
+    </div>
+  </div>
+
+  <div class="w-full max-w-[430px] bg-royalDark min-h-screen pb-32 relative shadow-2xl flex flex-col border-x border-gold-500/10 overflow-x-hidden">
+
+    <div class="px-4 pt-4 pb-2.5 flex items-center justify-between border-b border-white/5 bg-royalCard/40">
+      <a href="index.html" class="w-9 h-9 rounded-2xl bg-royalCard border border-gold-500/25 flex items-center justify-center text-gold-400 hover:border-gold-400 active:scale-95 transition shadow-sm">
+        <i class="fa-solid fa-arrow-left text-xs"></i>
+      </a>
+      <div class="text-center">
+        <span class="font-royal text-xs font-black tracking-widest text-gold-400 uppercase flex items-center justify-center gap-1.5">
+          <i class="fa-regular fa-user text-xs"></i> Royal Profile
+        </span>
+        <span class="text-[9px] text-gray-400 uppercase tracking-wider block">সদস্য পরিচিতি ও কন্ট্রোল সেন্টার</span>
+      </div>
+      <button onclick="refreshProfileData()" class="w-9 h-9 rounded-2xl bg-royalCard border border-gold-500/25 flex items-center justify-center text-gold-400 hover:border-gold-400 active:scale-95 transition shadow-sm" title="রিফ্রেশ">
+        <i class="fa-solid fa-rotate text-xs" id="refresh-icon"></i>
+      </button>
+    </div>
+
+    <main class="flex-1 px-4 pt-2.5 space-y-3.5">
+
+      <!-- ২. প্রোফাইল কার্ড -->
+      <div class="bg-royalCard border border-gold-500/25 rounded-3xl p-4 shadow-xl flex items-center gap-3.5 relative overflow-hidden">
+        <div class="relative w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-gold-600 via-gold-300 to-amber-200 flex-shrink-0 shadow-lg">
+          <img 
+            id="user-avatar"
+            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80" 
+            alt="Avatar" 
+            class="w-full h-full rounded-full object-cover border-2 border-royalDark"
+          />
+          <div class="absolute -bottom-1 -right-1 bg-royalDark rounded-full p-1 border border-gold-500/60 shadow">
+            <i class="fa-solid fa-crown text-[9px] text-gold-400"></i>
+          </div>
+        </div>
+
+        <div class="flex-1 min-w-0 space-y-1">
+          <div class="flex items-center gap-1.5">
+            <h2 class="font-extrabold text-sm text-white truncate" id="user-display-name">Royal Member</h2>
+            <i class="fa-solid fa-circle-check text-gold-400 text-xs flex-shrink-0"></i>
+          </div>
+          <p class="text-[11px] text-gray-400 font-mono leading-none truncate" id="user-username">@user</p>
+          
+          <div class="flex items-center gap-1.5 pt-0.5">
+            <span class="text-[10px] text-gold-300 font-mono font-bold bg-gold-500/10 px-2.5 py-0.5 rounded-lg border border-gold-500/30 truncate" id="user-royal-id-label">Royal ID: #RC-000000</span>
+            <button onclick="copyRoyalID()" class="text-[11px] text-gold-400 hover:text-white bg-white/5 p-1 rounded-md">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+          </div>
+
+          <div class="pt-1 flex items-center gap-1.5 flex-wrap">
+            <span id="account-status-badge" class="inline-flex items-center gap-1 bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-[9px] font-bold px-2 py-0.5 rounded-full">
+              <i class="fa-solid fa-circle-check text-[8px] text-emerald-400"></i>
+              <span>Active Member</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ৩. পদবী লেভেল কার্ড -->
+      <div class="bg-royalCard border border-gold-500/20 rounded-2xl p-3.5 shadow-md space-y-2.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-amber-700/20 border border-amber-600/40 flex items-center justify-center text-amber-500 text-sm">
+              <i class="fa-solid fa-shield"></i>
+            </div>
+            <div>
+              <span class="text-xs font-bold text-white block" id="current-rank-label">Level 1 (প্রহরী)</span>
+              <span class="text-[9px] text-gold-400 font-medium font-royal tracking-wider">ROYAL CHAIN RANK</span>
+            </div>
+          </div>
+          <a href="royal-chain.html?tab=tiers" class="text-[10px] font-bold text-gold-300 bg-gold-500/10 px-2.5 py-1 rounded-xl flex items-center gap-1">
+            <span>পদবী তালিকা</span>
+            <i class="fa-solid fa-chevron-right text-[8px]"></i>
+          </a>
+        </div>
+
+        <div class="space-y-1">
+          <div class="flex items-center justify-between text-[10px] text-gray-400">
+            <span>পরবর্তী পদবী: <strong class="text-gray-200" id="next-rank-label">সেনা</strong></span>
+            <span class="font-mono text-gold-400 font-bold" id="rank-progress-text">০ / ৩ মেম্বার</span>
+          </div>
+          <div class="w-full bg-black/60 rounded-full h-2 overflow-hidden border border-white/5">
+            <div class="bg-gradient-to-r from-gold-600 to-gold-400 h-full rounded-full" id="rank-progress-bar" style="width: 10%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ৪. ব্যালেন্স কার্ড -->
+      <div class="gold-metallic-bg rounded-3xl p-4 text-gray-950 shadow-xl royal-glow shimmer-active relative overflow-hidden flex items-center justify-between">
+        <div class="flex-1 min-w-0 relative z-10 space-y-0.5">
+          <div class="flex items-center gap-1.5 text-amber-950 font-black text-[10px] tracking-wider uppercase">
+            <span>Total Balance</span>
+          </div>
+          <div class="flex items-baseline gap-1 py-0.5">
+            <span class="text-2xl font-black tracking-tight text-black font-sans truncate" id="balance-amount">0.00</span>
+            <span class="text-xs font-black uppercase text-amber-950 tracking-wider">RC</span>
+          </div>
+          <div class="text-[10px] text-amber-950/85 font-medium truncate">
+            উত্তোলনযোগ্য: <span class="font-bold text-black" id="available-amount">0.00</span> RC
+          </div>
+        </div>
+        <a href="withdraw.html" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-black/90 text-gold-300 text-xs font-bold rounded-2xl shadow-lg">
+          <i class="fa-solid fa-wallet text-gold-400 text-xs"></i>
+          <span>উইথড্র</span>
+        </a>
+      </div>
+
+      <!-- ৫. পরিসংখ্যান -->
+      <div class="bg-royalCard border border-gold-500/20 rounded-2xl p-3 shadow-md">
+        <div class="grid grid-cols-4 divide-x divide-white/5 text-center">
+          <div class="flex flex-col items-center">
+            <span class="text-xs font-black text-white font-royal" id="stat-referrals">0</span>
+            <span class="text-[9px] text-gray-400 mt-1">রেফার</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <span class="text-xs font-black text-white font-royal" id="stat-tasks">0</span>
+            <span class="text-[9px] text-gray-400 mt-1">টাস্ক</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <span class="text-xs font-black text-white font-royal" id="stat-ads">0</span>
+            <span class="text-[9px] text-gray-400 mt-1">বিজ্ঞাপন</span>
+          </div>
+          <div class="flex flex-col items-center">
+            <span class="text-xs font-black text-gold-400 font-royal" id="stat-earned">0.00</span>
+            <span class="text-[9px] text-gray-400 mt-1">মোট RC</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ৬. প্রমো কোড রিডিম বক্স (Backend Atomic) -->
+      <div class="bg-gradient-to-r from-royalCard via-[#1f190e] to-royalCard border border-gold-500/30 rounded-2xl p-3.5 shadow-md space-y-2">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-gold-500/15 border border-gold-500/30 flex items-center justify-center text-gold-400 text-xs">
+              <i class="fa-solid fa-ticket"></i>
+            </div>
+            <h4 class="text-xs font-bold text-white">প্রমো কোড রিডিম করুন</h4>
+          </div>
+          <span class="text-[9px] text-gold-400 font-semibold bg-gold-500/10 px-2 py-0.5 rounded-full border border-gold-500/20">অফিসিয়াল কোড</span>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <input 
+            type="text" 
+            id="promo-code-input" 
+            placeholder="আপনার প্রমো কোড লিখুন..." 
+            class="bg-black/60 border border-gold-500/25 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-gold-400 flex-1 font-mono uppercase shadow-inner"
+          />
+          <button 
+            id="btn-redeem-promo"
+            onclick="redeemPromoCodeAction()" 
+            class="px-4 py-2 rounded-xl bg-gradient-to-r from-gold-600 to-gold-400 hover:brightness-110 active:scale-95 text-black font-extrabold text-xs shadow-md transition flex-shrink-0"
+          >
+            ক্লেইম
+          </button>
+        </div>
+      </div>
+
+      <!-- ৭. সাম্প্রতিক লেনদেন -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between px-1">
+          <span class="text-xs font-bold text-gray-300 uppercase tracking-wider">সাম্প্রতিক লেনদেন</span>
+        </div>
+        <div id="user-activities-container" class="space-y-1.5">
+          <div class="bg-royalCard border border-white/5 p-4 rounded-2xl text-center text-xs text-gray-500">
+            লোড হচ্ছে...
+          </div>
+        </div>
+      </div>
+
+      <!-- ৮. মেনু -->
+      <div class="bg-royalCard border border-white/5 rounded-2xl divide-y divide-white/5 shadow-md">
+        <a href="activate.html" class="p-3.5 flex items-center justify-between hover:bg-white/5 transition">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-shield-halved text-gold-400 text-xs"></i>
+            <span class="text-xs font-bold text-white">অ্যাকাউন্ট ভেরিফিকেশন ও লোন</span>
+          </div>
+          <i class="fa-solid fa-chevron-right text-[10px] text-gray-500"></i>
+        </a>
+      </div>
+
+    </main>
+
+    <!-- বটম বার -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-royalCard/95 backdrop-blur-lg border-t border-gold-500/20 py-2.5 px-3 z-50 rounded-t-2xl shadow-2xl">
+      <div class="grid grid-cols-5 text-center">
+        <a href="index.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-solid fa-house text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Home</span>
+        </a>
+        <a href="earn.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-regular fa-envelope-open text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Earn</span>
+        </a>
+        <a href="refer.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-solid fa-user-group text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Refer</span>
+        </a>
+        <a href="withdraw.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-regular fa-credit-card text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Withdraw</span>
+        </a>
+        <button class="flex flex-col items-center justify-center text-gold-400 relative">
+          <div class="w-9 h-7 rounded-xl bg-gold-500/20 border border-gold-500/40 flex items-center justify-center shadow-inner">
+            <i class="fa-regular fa-user text-sm"></i>
+          </div>
+          <span class="text-[10px] font-bold mt-1 text-gold-400">Profile</span>
+        </button>
+      </div>
+    </nav>
+
+  </div>
+
+  <script type="module">
+    import { 
+      initSuperEngine, 
+      triggerHaptic, 
+      fetchLiveActivities, 
+      getImmediateCachedProfile, 
+      calculateUserRank,
+      apiFetch,
+      tg 
+    } from './royal-core.js';
+
+    let activeUser = null;
+    let activeUserId = null;
+    let currentBalance = 0.00;
+    let userReferrals = 0;
+
+    function loadCachedStateImmediately() {
+      try {
+        const cached = getImmediateCachedProfile();
+        if (cached.royalId) document.getElementById('user-royal-id-label').innerText = `Royal ID: #${cached.royalId}`;
+        if (cached.balance !== undefined) {
+          currentBalance = cached.balance;
+          document.getElementById('balance-amount').innerText = currentBalance.toFixed(2);
+          document.getElementById('available-amount').innerText = currentBalance.toFixed(2);
+          document.getElementById('stat-earned').innerText = currentBalance.toFixed(2);
+        }
+      } catch (e) {}
+    }
+    loadCachedStateImmediately();
+
+    async function initProfilePage() {
+      try {
+        const { userId, userData } = await initSuperEngine();
+        activeUser = userData;
+        activeUserId = userId;
+        currentBalance = Number(userData.balance || 0);
+        userReferrals = Number(userData.user_referrals || 0);
+        updateProfileUI();
+        await loadUserActivities();
+      } catch (err) {}
+    }
+
+    function updateProfileUI() {
+      document.getElementById('user-display-name').innerText = activeUser?.name || "Royal Member";
+      document.getElementById('user-username').innerText = activeUser?.username || "@user";
+      if (activeUser?.photoUrl) document.getElementById('user-avatar').src = activeUser.photoUrl;
+
+      const royalId = activeUser?.royal_id || activeUserId?.replace('tg_', 'RC-') || 'RC-000000';
+      document.getElementById('user-royal-id-label').innerText = `Royal ID: #${royalId}`;
+
+      document.getElementById('balance-amount').innerText = currentBalance.toFixed(2);
+      document.getElementById('available-amount').innerText = currentBalance.toFixed(2);
+      document.getElementById('stat-earned').innerText = currentBalance.toFixed(2);
+      document.getElementById('stat-referrals').innerText = userReferrals;
+
+      const rankInfo = calculateUserRank(userReferrals);
+      document.getElementById('current-rank-label').innerText = `Level ${rankInfo.current.level} (${rankInfo.current.bn})`;
+      document.getElementById('next-rank-label').innerText = `${rankInfo.next.bn}`;
+      document.getElementById('rank-progress-text').innerText = `${userReferrals} / ${rankInfo.next.req} মেম্বার`;
+      document.getElementById('rank-progress-bar').style.width = `${Math.max(8, rankInfo.progressPercent)}%`;
+    }
+
+    async function loadUserActivities() {
+      const container = document.getElementById('user-activities-container');
+      try {
+        const list = await fetchLiveActivities(activeUserId, 3);
+        if (!list || list.length === 0) {
+          container.innerHTML = `<div class="bg-royalCard border border-white/5 p-4 rounded-2xl text-center text-xs text-gray-500">কোনো সাম্প্রতিক লেনদেন নেই</div>`;
+          return;
+        }
+        container.innerHTML = list.map(item => `
+          <div class="bg-royalCard border border-white/5 p-3 rounded-2xl flex items-center justify-between">
+            <div>
+              <h5 class="text-xs font-bold text-white">${item.title || 'Activity'}</h5>
+              <p class="text-[10px] text-gray-400">${item.description || ''}</p>
+            </div>
+            <div class="text-right font-mono">
+              <span class="text-xs font-bold ${item.type === 'credit' ? 'text-emerald-400' : 'text-red-400'}">${item.type === 'credit' ? '+' : '-'}${Number(item.amount).toFixed(2)} RC</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {}
+    }
+
+    // Backend-authoritative Promo Code Redemption
+    window.redeemPromoCodeAction = async function() {
+      triggerHaptic('medium');
+      const input = document.getElementById('promo-code-input');
+      const code = input.value.trim().toUpperCase();
+
+      if (!code) {
+        showToast('প্রমো কোড লিখুন!', 'fa-ticket');
+        return;
+      }
+
+      const btn = document.getElementById('btn-redeem-promo');
+      btn.disabled = true;
+      btn.innerText = "যাচাই হচ্ছে...";
+
+      try {
+        const res = await apiFetch('/api/promos/redeem', {
+          method: 'POST',
+          body: JSON.stringify({ code })
+        });
+
+        if (res.success) {
+          currentBalance = res.newBalance;
+          updateProfileUI();
+          input.value = '';
+          confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 }, colors: ['#D4AF37', '#FFFDEB'] });
+          showToast(res.message || `+${res.reward} RC প্রমো বোনাস যুক্ত হয়েছে!`);
+          await loadUserActivities();
+        } else {
+          showToast(res.error || 'ভুল বা নিষ্ক্রিয় প্রমো কোড!', 'fa-triangle-exclamation');
+        }
+      } catch (err) {
+        showToast('সার্ভার সংযোগ সমস্যা', 'fa-triangle-exclamation');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "ক্লেইম";
+      }
+    };
+
+    window.copyRoyalID = function() {
+      const rId = activeUser?.royal_id || activeUserId?.replace('tg_', 'RC-') || 'RC-000000';
+      navigator.clipboard.writeText(rId).then(() => showToast(`Royal ID কপি হয়েছে: #${rId}`));
+    };
+
+    window.refreshProfileData = async function() {
+      const icon = document.getElementById('refresh-icon');
+      icon.classList.add('animate-spin');
+      await initProfilePage();
+      setTimeout(() => { icon.classList.remove('animate-spin'); showToast('প্রোফাইল রিফ্রেশ হয়েছে!'); }, 600);
+    };
+
+    let toastTimer = null;
+    window.showToast = function(msg, icon = 'fa-circle-check') {
+      const toast = document.getElementById('royal-toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+      if (!toast) return;
+      toastMsg.innerText = msg;
+      toastIcon.className = `fa-solid ${icon} text-gold-400 text-xs`;
+      clearTimeout(toastTimer);
+      toast.classList.remove('opacity-0', '-translate-y-8', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+        toast.classList.add('opacity-0', '-translate-y-8', 'pointer-events-none');
+      }, 2200);
+    };
+
+    document.addEventListener('DOMContentLoaded', initProfilePage);
+  </script>
+</body>
+</html>

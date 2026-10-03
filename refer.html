@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Royal Time - Refer & Earn</title>
+  
+  <!-- Telegram WebApp Script -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Premium Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Confetti Script -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            royal: ['Cinzel', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            gold: {
+              100: '#FFFDEB',
+              200: '#FDEFB4',
+              300: '#F9DD78',
+              400: '#F3C544',
+              500: '#D4AF37', // 24K Royal Gold
+              600: '#AA820A',
+              700: '#7F6000',
+            },
+            royalDark: '#08080B',
+            royalCard: '#121319',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .gold-metallic-bg {
+      background: linear-gradient(135deg, #FDECA6 0%, #D4AF37 38%, #936C0A 75%, #F7E493 100%);
+    }
+
+    .royal-glow {
+      box-shadow: 0 4px 25px rgba(212, 175, 55, 0.22);
+    }
+
+    @keyframes royalShimmer {
+      0% { transform: translateX(-150%) skewX(-25deg); }
+      40% { transform: translateX(150%) skewX(-25deg); }
+      100% { transform: translateX(150%) skewX(-25deg); }
+    }
+
+    .shimmer-active {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .shimmer-active::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(60deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+      animation: royalShimmer 4s infinite;
+      pointer-events: none;
+    }
+
+    html, body { overflow-x: hidden; max-width: 100%; user-select: none; }
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+
+<body class="bg-[#030305] text-gray-200 font-sans flex justify-center min-h-screen">
+
+  <!-- গ্লোবাল ডাইনামিক আইল্যান্ড টোস্ট -->
+  <div id="royal-toast" class="fixed top-3 left-1/2 -translate-x-1/2 z-[150] transition-all duration-300 ease-out pointer-events-none opacity-0 -translate-y-8">
+    <div class="px-4 py-2 rounded-full bg-[#121319]/95 border border-gold-500/40 backdrop-blur-xl shadow-2xl flex items-center gap-2 text-xs text-gold-200 font-sans whitespace-nowrap">
+      <span class="w-2 h-2 rounded-full bg-gold-400 animate-ping"></span>
+      <i id="toast-icon" class="fa-solid fa-circle-check text-gold-400 text-xs"></i>
+      <span id="toast-msg" class="font-semibold tracking-wide">Action Successful</span>
+    </div>
+  </div>
+
+  <!-- মোবাইল ফ্রেম কনটেইনার -->
+  <div class="w-full max-w-[430px] bg-royalDark min-h-screen pb-32 relative shadow-2xl flex flex-col border-x border-gold-500/10 overflow-x-hidden">
+
+    <!-- ১. স্লিম ও মার্জিত হেডার -->
+    <div class="px-4 pt-4 pb-2 flex items-center justify-between border-b border-white/5 bg-royalCard/40">
+      <a href="index.html" class="w-9 h-9 rounded-2xl bg-royalCard border border-gold-500/25 flex items-center justify-center text-gold-400 hover:border-gold-400 active:scale-95 transition shadow-sm">
+        <i class="fa-solid fa-arrow-left text-xs"></i>
+      </a>
+      <div class="text-center">
+        <span class="font-royal text-xs font-black tracking-widest text-gold-400 uppercase flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-user-group text-xs"></i> Refer & Earn
+        </span>
+        <span class="text-[9px] text-gray-400 uppercase tracking-wider block font-mono">রেফারেল প্রোগ্রাম ও টিম</span>
+      </div>
+      <button onclick="shareDirectTelegram()" class="w-9 h-9 rounded-2xl bg-royalCard border border-gold-500/25 flex items-center justify-center text-gold-400 hover:border-gold-400 active:scale-95 transition shadow-sm" title="শেয়ার করুন">
+        <i class="fa-solid fa-share-nodes text-xs"></i>
+      </button>
+    </div>
+
+    <!-- মেইন কন্টেন্ট এরিয়া -->
+    <main class="flex-1 px-4 pt-2.5 space-y-3">
+
+      <!-- ২. অটো-স্লাইডিং ব্যানার -->
+      <div class="relative overflow-hidden rounded-2xl border border-gold-500/30 shadow-lg bg-royalCard w-full">
+        <div id="refer-slider-track" class="flex transition-transform duration-700 ease-in-out w-full" style="transform: translateX(0%);">
+          <div class="w-full flex-shrink-0 p-3 bg-gradient-to-r from-[#291e10] via-royalCard to-[#17140e] flex items-center justify-between">
+            <div class="space-y-0.5 max-w-[250px]">
+              <span class="text-[9px] font-black uppercase text-gold-400 tracking-wider flex items-center gap-1">
+                <i class="fa-solid fa-bolt text-[8px] animate-pulse"></i> ইনস্ট্যান্ট ক্যাশ রিওয়ার্ড
+              </span>
+              <h4 class="text-xs font-black text-white leading-tight" id="slide-1-text">১টি সফল রেফারে পাবেন ১০.০০ RC</h4>
+              <p class="text-[10px] text-gray-400 truncate">বন্ধু একাউন্ট চালু করলেই বোনাস আনলক</p>
+            </div>
+            <div class="w-9 h-9 rounded-xl bg-gold-500/15 border border-gold-500/30 flex items-center justify-center text-gold-400 text-base mr-1 flex-shrink-0 shadow-inner">
+              <i class="fa-solid fa-gift"></i>
+            </div>
+          </div>
+
+          <div class="w-full flex-shrink-0 p-3 bg-gradient-to-r from-[#0d2417] via-royalCard to-[#09170f] flex items-center justify-between">
+            <div class="space-y-0.5 max-w-[250px]">
+              <span class="text-[9px] font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1">
+                <i class="fa-solid fa-chart-line text-[8px]"></i> রেফারেল সুপার বুস্টার
+              </span>
+              <h4 class="text-xs font-black text-white leading-tight" id="slide-2-text">১০টি রেফারে আয় ১০০.০০ RC</h4>
+              <p class="text-[10px] text-gray-400 truncate">রেফার সংখ্যা বাড়ার সাথে পদবীও বাড়বে</p>
+            </div>
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-base mr-1 flex-shrink-0 shadow-inner">
+              <i class="fa-solid fa-coins"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ৩. মূল রাজকীয় গোল্ড রিওয়ার্ড ব্যানার -->
+      <div class="gold-metallic-bg rounded-3xl p-4 text-gray-950 shadow-xl royal-glow shimmer-active relative overflow-hidden flex items-center justify-between">
+        <i class="fa-solid fa-gift absolute -right-5 -bottom-5 text-8xl opacity-15 pointer-events-none text-black"></i>
+        <div class="relative z-10 space-y-1 min-w-0 flex-1">
+          <span class="text-[9px] font-black tracking-widest uppercase text-amber-950 block">ইনভাইট করুন ও রিওয়ার্ড জিতুন</span>
+          <h2 class="text-xl font-black text-black font-royal leading-tight" id="reward-banner-text">
+            প্রতি রেফারে ১০.০০ RC
+          </h2>
+          <div class="inline-flex items-center gap-1.5 bg-black/90 text-gold-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold border border-gold-400/40 shadow">
+            <i class="fa-solid fa-gift text-gold-400 text-[9px]"></i>
+            <span id="friend-bonus-text">বন্ধু পাবে ১৫.০০ RC ফ্রি বোনাস</span>
+          </div>
+        </div>
+        <div class="w-14 h-14 rounded-2xl bg-black/85 border border-gold-400/50 flex items-center justify-center flex-shrink-0 shadow-lg ml-2">
+          <i class="fa-solid fa-gift text-2xl text-gold-400"></i>
+        </div>
+      </div>
+
+      <!-- ৪. উইথড্রয়াল আনলক ট্র্যাকার -->
+      <div class="bg-royalCard border border-gold-500/20 rounded-2xl p-3 shadow-md space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-gold-500/10 border border-gold-500/25 flex items-center justify-center text-gold-400 text-xs">
+              <i class="fa-solid fa-lock-open"></i>
+            </div>
+            <div>
+              <span class="text-[11px] font-bold text-white block" id="unlock-target-text">উইথড্রয়াল আনলক শর্ত: লোড হচ্ছে...</span>
+              <span class="text-[9px] text-gray-400" id="unlock-sub-text">আপনার রেফার সংখ্যা: <strong class="text-white font-mono" id="referral-count">0</strong> জন</span>
+            </div>
+          </div>
+          <span class="text-[10px] font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-mono" id="referral-needed-badge">
+            যাচাই হচ্ছে...
+          </span>
+        </div>
+        <div class="w-full bg-black/50 rounded-full h-1.5 overflow-hidden border border-white/5">
+          <div class="bg-gradient-to-r from-gold-600 to-gold-400 h-full rounded-full transition-all duration-500" id="referral-progress-bar" style="width: 5%"></div>
+        </div>
+      </div>
+
+      <!-- ৫. রেফারেল লিংক বক্স -->
+      <div class="bg-royalCard border border-gold-500/20 rounded-2xl p-3.5 space-y-2.5 shadow-md">
+        <div class="flex items-center justify-between px-0.5">
+          <label class="text-[10px] font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-link text-gold-400 text-xs"></i> আপনার রেফারেল লিংক
+          </label>
+          <span id="copied-badge" class="text-[9px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-full hidden">
+            <i class="fa-solid fa-check"></i> লিংক কপি হয়েছে!
+          </span>
+        </div>
+
+        <div class="flex items-center gap-1.5 bg-black/60 border border-gold-500/25 rounded-xl p-1.5">
+          <input 
+            id="referral-link" 
+            type="text" 
+            readonly 
+            value="https://t.me/RoyalTimee_Bot/app?startapp=..." 
+            class="bg-transparent text-xs text-gray-300 px-2 py-1 flex-1 focus:outline-none truncate font-mono select-all"
+          >
+          <button 
+            onclick="copyReferralLink()" 
+            class="bg-gradient-to-r from-gold-600 to-gold-400 hover:brightness-110 text-black px-3.5 py-2 rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm active:scale-95 transition flex-shrink-0"
+          >
+            <i class="fa-regular fa-copy"></i>
+            <span>Copy</span>
+          </button>
+        </div>
+
+        <button 
+          onclick="shareDirectTelegram()" 
+          class="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 active:scale-95 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition"
+        >
+          <i class="fa-brands fa-telegram text-sm"></i>
+          <span>টেলিগ্রাম বন্ধুদের ইনভাইট করুন</span>
+        </button>
+      </div>
+
+      <!-- ৬. বিস্তারিত রেফারেল পরিসংখ্যান -->
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-royalCard border border-gold-500/20 rounded-2xl p-2.5 text-center">
+          <div class="w-6 h-6 rounded-lg bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-gold-400 text-[10px] mx-auto mb-1">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <span class="text-sm font-black text-white font-royal" id="stat-total-ref">0</span>
+          <span class="text-[9px] text-gray-400 block font-sans">মোট রেফার</span>
+        </div>
+
+        <div class="bg-royalCard border border-gold-500/20 rounded-2xl p-2.5 text-center">
+          <div class="w-6 h-6 rounded-lg bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-gold-400 text-[10px] mx-auto mb-1">
+            <i class="fa-solid fa-user-check"></i>
+          </div>
+          <span class="text-sm font-black text-white font-royal" id="stat-active-ref">0</span>
+          <span class="text-[9px] text-gray-400 block font-sans">সক্রিয় মেম্বার</span>
+        </div>
+
+        <div class="bg-royalCard border border-gold-500/20 rounded-2xl p-2.5 text-center">
+          <div class="w-6 h-6 rounded-lg bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-gold-400 text-[10px] mx-auto mb-1">
+            <i class="fa-solid fa-coins"></i>
+          </div>
+          <span class="text-sm font-black text-gold-400 font-royal" id="stat-ref-earned">0.00</span>
+          <span class="text-[9px] text-gray-400 block font-sans">মোট RC আয়</span>
+        </div>
+      </div>
+
+      <!-- ৭. লাইভ রেফারেল টিম তালিকা -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between px-1">
+          <span class="text-xs font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-people-group text-gold-400 text-xs"></i> আপনার রেফারেল টিম
+          </span>
+          <span class="text-[10px] text-gray-500 font-mono" id="team-count">0 Members</span>
+        </div>
+        <div id="referral-team-list" class="space-y-2">
+          <div id="empty-team" class="bg-royalCard border border-white/5 rounded-2xl p-4 text-center space-y-1.5 shadow-sm">
+            <div class="w-9 h-9 rounded-full bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-gold-400 text-sm mx-auto">
+              <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h4 class="text-xs font-bold text-white">এখনও কোনো বন্ধু জয়েন করেনি</h4>
+            <p class="text-[10px] text-gray-400 max-w-[240px] mx-auto">
+              আপনার রেফারেল লিংক বন্ধুদের সাথে শেয়ার করে টিম তৈরি করুন।
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ৮. মূল ৫টি বটম নেভিগেশন বার -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-royalCard/95 backdrop-blur-lg border-t border-gold-500/20 py-2.5 px-3 z-50 rounded-t-2xl shadow-2xl">
+      <div class="grid grid-cols-5 text-center">
+        <a href="index.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-solid fa-house text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Home</span>
+        </a>
+
+        <a href="earn.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-regular fa-envelope-open text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Earn</span>
+        </a>
+
+        <!-- Refer (Active) -->
+        <button class="flex flex-col items-center justify-center text-gold-400 relative">
+          <div class="w-9 h-7 rounded-xl bg-gold-500/20 border border-gold-500/40 flex items-center justify-center shadow-inner">
+            <i class="fa-solid fa-user-group text-sm"></i>
+          </div>
+          <span class="text-[10px] font-bold mt-1 text-gold-400">Refer</span>
+        </button>
+
+        <a href="withdraw.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-regular fa-credit-card text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Withdraw</span>
+        </a>
+
+        <a href="profile.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-regular fa-user text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Profile</span>
+        </a>
+      </div>
+    </nav>
+
+  </div>
+
+  <script type="module">
+    import { 
+      initSuperEngine, 
+      triggerHaptic, 
+      getImmediateCachedProfile,
+      apiFetch,
+      BOT_USERNAME,
+      tg, 
+      db 
+    } from './royal-core.js';
+
+    import { collection, query, where, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    let currentUserId = null;
+    let referralCodeParam = '';
+    let refRewardPerUser = 10.00;
+    let requiredReferrals = 0;
+    let signupBonusAmount = 15.00;
+    let botUsername = BOT_USERNAME || "RoyalTimee_Bot";
+    let activeReferralsCount = 0;
+    let totalReferralsCount = 0;
+
+    function loadCachedStateImmediately() {
+      try {
+        const cached = getImmediateCachedProfile();
+        const refs = Number(cached.referrals) || 0;
+        document.getElementById('referral-count').innerText = refs;
+        document.getElementById('stat-total-ref').innerText = refs;
+        document.getElementById('stat-ref-earned').innerText = (refs * refRewardPerUser).toFixed(2);
+        updateProgressUI(refs, requiredReferrals);
+      } catch (e) {}
+    }
+
+    loadCachedStateImmediately();
+
+    async function initReferralPage() {
+      try {
+        const { userId, userData } = await initSuperEngine();
+        currentUserId = userId;
+        const rawTgId = userId.replace('tg_', '');
+        referralCodeParam = (userData.username && userData.username !== '@user') ? userData.username.replace('@', '') : rawTgId;
+        totalReferralsCount = Number(userData.user_referrals || 0);
+
+        await loadAdminReferralConfig();
+        await loadLiveReferralTeam(userData);
+        updateReferralUI();
+      } catch (err) {}
+    }
+
+    async function loadAdminReferralConfig() {
+      try {
+        const res = await apiFetch('/api/config');
+        if (res.success && res.config) {
+          const cfg = res.config;
+          if (cfg.referReward !== undefined) refRewardPerUser = Number(cfg.referReward);
+          if (cfg.withdrawRequiredReferrals !== undefined) requiredReferrals = Number(cfg.withdrawRequiredReferrals);
+          if (cfg.signupBonus !== undefined) signupBonusAmount = Number(cfg.signupBonus);
+          if (cfg.botUsername) botUsername = cfg.botUsername.replace('@', '');
+        }
+      } catch (e) {}
+
+      const rewardBanner = document.getElementById('reward-banner-text');
+      const friendBonusText = document.getElementById('friend-bonus-text');
+      const s1 = document.getElementById('slide-1-text');
+      const s2 = document.getElementById('slide-2-text');
+
+      if (rewardBanner) rewardBanner.innerText = `প্রতি রেফারে ${refRewardPerUser.toFixed(2)} RC`;
+      if (friendBonusText) friendBonusText.innerText = `বন্ধু পাবে ${signupBonusAmount.toFixed(2)} RC ফ্রি বোনাস`;
+      if (s1) s1.innerText = `১টি সফল রেফারে পাবেন ${refRewardPerUser.toFixed(2)} RC`;
+      if (s2) s2.innerText = `১০টি রেফারে আয় ${(refRewardPerUser * 10).toFixed(2)} RC`;
+    }
+
+    async function loadLiveReferralTeam(userData) {
+      try {
+        const rawTgId = currentUserId.replace('tg_', '');
+        const cleanRoyalId = (userData?.royal_id || '').replace('#', '').trim();
+        const matchValues = [currentUserId, rawTgId, referralCodeParam, `@${referralCodeParam}`];
+        if (cleanRoyalId) matchValues.push(cleanRoyalId);
+
+        const q = query(collection(db, "users"), where("referredBy", "in", matchValues), limit(30));
+        const querySnapshot = await getDocs(q);
+        const teamList = document.getElementById('referral-team-list');
+        const teamCountEl = document.getElementById('team-count');
+
+        if (!querySnapshot.empty) {
+          teamList.innerHTML = '';
+          totalReferralsCount = Math.max(totalReferralsCount, querySnapshot.size);
+          activeReferralsCount = 0;
+          if (teamCountEl) teamCountEl.innerText = `${totalReferralsCount} Members`;
+
+          querySnapshot.forEach((docSnap) => {
+            const member = docSnap.data();
+            const isMemberActive = member.account_status === 'active';
+            if (isMemberActive) activeReferralsCount++;
+            const memberName = member.name || "Royal Member";
+            const memberPhoto = member.photoUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80";
+
+            const teamItem = document.createElement('div');
+            teamItem.className = "bg-royalCard border border-white/5 p-3 rounded-2xl flex items-center justify-between shadow-sm";
+            teamItem.innerHTML = `
+              <div class="flex items-center gap-2.5 min-w-0">
+                <img src="${memberPhoto}" class="w-8 h-8 rounded-xl object-cover border border-white/10 flex-shrink-0" />
+                <div class="min-w-0">
+                  <h5 class="text-xs font-bold text-white truncate max-w-[160px]">${memberName}</h5>
+                  <p class="text-[10px] text-gray-400">${isMemberActive ? '<span class="text-emerald-400 font-bold">সক্রিয়</span>' : '<span class="text-amber-400 font-medium">পেন্ডিং</span>'}</p>
+                </div>
+              </div>
+              <span class="text-xs font-bold text-gold-400 font-mono flex-shrink-0">+ ${refRewardPerUser.toFixed(2)} RC</span>
+            `;
+            teamList.appendChild(teamItem);
+          });
+        }
+      } catch (err) {}
+    }
+
+    function updateProgressUI(refs, target) {
+      const unlockTarget = document.getElementById('unlock-target-text');
+      const unlockSub = document.getElementById('unlock-sub-text');
+      const bar = document.getElementById('referral-progress-bar');
+      const badge = document.getElementById('referral-needed-badge');
+
+      if (target === 0) {
+        if (unlockTarget) unlockTarget.innerText = "উইথড্রয়াল আনলক শর্ত: প্রযোজ্য নয় (০ জন)";
+        if (unlockSub) unlockSub.innerHTML = `আপনার রেফার: <strong class="text-white font-mono">${refs}</strong> জন (রেফার ছাড়াই উইথড্র আনলক)`;
+        if (bar) bar.style.width = `100%`;
+        if (badge) {
+          badge.innerText = "রেফার প্রয়োজন নেই ✓";
+          badge.className = "text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 font-mono";
+        }
+        return;
+      }
+
+      if (unlockTarget) unlockTarget.innerText = `উইথড্রয়াল আনলক শর্ত: ${target} জন`;
+      if (unlockSub) unlockSub.innerHTML = `আপনার রেফার সংখ্যা: <strong class="text-white font-mono">${refs}</strong> জন`;
+
+      const progressPercent = Math.min(100, Math.round((refs / target) * 100));
+      if (bar) bar.style.width = `${Math.max(5, progressPercent)}%`;
+
+      if (badge) {
+        if (refs >= target) {
+          badge.innerText = "শর্ত পূরণ হয়েছে ✓";
+          badge.className = "text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 font-mono";
+        } else {
+          badge.innerText = `${target - refs} জন বাকি`;
+          badge.className = "text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-mono";
+        }
+      }
+    }
+
+    function updateReferralUI() {
+      const refLink = `https://t.me/${botUsername}/app?startapp=${referralCodeParam}`;
+      const linkInput = document.getElementById('referral-link');
+      if (linkInput) linkInput.value = refLink;
+
+      document.getElementById('referral-count').innerText = totalReferralsCount;
+      document.getElementById('stat-total-ref').innerText = totalReferralsCount;
+      document.getElementById('stat-active-ref').innerText = activeReferralsCount;
+      document.getElementById('stat-ref-earned').innerText = (totalReferralsCount * refRewardPerUser).toFixed(2);
+      updateProgressUI(totalReferralsCount, requiredReferrals);
+    }
+
+    window.copyReferralLink = function() {
+      triggerHaptic('light');
+      const linkInput = document.getElementById('referral-link');
+      const badge = document.getElementById('copied-badge');
+      navigator.clipboard.writeText(linkInput.value).then(() => {
+        if (badge) badge.classList.remove('hidden');
+        confetti({ particleCount: 40, spread: 50, origin: { y: 0.8 }, colors: ['#D4AF37', '#FFFDEB'] });
+        showToast('রেফারেল লিংক কপি হয়েছে!');
+        setTimeout(() => { if (badge) badge.classList.add('hidden'); }, 2200);
+      });
+    };
+
+    window.shareDirectTelegram = function() {
+      triggerHaptic('light');
+      const link = document.getElementById('referral-link').value;
+      const text = `Royal Time এ জয়েন করে ফ্রি ${signupBonusAmount.toFixed(2)} RC কয়েন বোনাস নিন! 🎁`;
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`;
+      if (tg && tg.openTelegramLink) tg.openTelegramLink(shareUrl);
+      else window.open(shareUrl, '_blank');
+    };
+
+    let toastTimer = null;
+    window.showToast = function(msg, icon = 'fa-circle-check') {
+      const toast = document.getElementById('royal-toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+      if (!toast) return;
+      toastMsg.innerText = msg;
+      toastIcon.className = `fa-solid ${icon} text-gold-400 text-xs`;
+      clearTimeout(toastTimer);
+      toast.classList.remove('opacity-0', '-translate-y-8', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+        toast.classList.add('opacity-0', '-translate-y-8', 'pointer-events-none');
+      }, 2200);
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => initReferralPage());
+    } else {
+      initReferralPage();
+    }
+  </script>
+</body>
+</html>

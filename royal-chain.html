@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Royal Time - Royal Court & Leaderboard</title>
+  
+  <!-- Telegram WebApp Script -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Premium Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Confetti Script -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            royal: ['Cinzel', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            gold: {
+              100: '#FFFDEB',
+              200: '#FDEFB4',
+              300: '#F9DD78',
+              400: '#F3C544',
+              500: '#D4AF37', // 24K Royal Gold
+              600: '#AA820A',
+              700: '#7F6000',
+            },
+            royalDark: '#08080B',
+            royalCard: '#121319',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .gold-metallic-bg { background: linear-gradient(135deg, #FDECA6 0%, #D4AF37 38%, #936C0A 75%, #F7E493 100%); }
+    .gold-glow { box-shadow: 0 4px 25px rgba(212, 175, 55, 0.28); }
+    @keyframes royalShimmer {
+      0% { transform: translateX(-150%) skewX(-25deg); }
+      40% { transform: translateX(150%) skewX(-25deg); }
+      100% { transform: translateX(150%) skewX(-25deg); }
+    }
+    .shimmer-active { position: relative; overflow: hidden; }
+    .shimmer-active::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(60deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+      animation: royalShimmer 3.8s infinite;
+      pointer-events: none;
+    }
+    html, body { overflow-x: hidden; max-width: 100%; user-select: none; }
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+
+<body class="bg-[#030305] text-gray-200 font-sans flex justify-center min-h-screen">
+
+  <div id="royal-toast" class="fixed top-3 left-1/2 -translate-x-1/2 z-[160] transition-all duration-300 ease-out pointer-events-none opacity-0 -translate-y-8">
+    <div class="px-4 py-2 rounded-full bg-[#121319]/95 border border-gold-500/40 backdrop-blur-xl shadow-2xl flex items-center gap-2 text-xs text-gold-200 font-sans whitespace-nowrap">
+      <span class="w-2 h-2 rounded-full bg-gold-400 animate-ping"></span>
+      <i id="toast-icon" class="fa-solid fa-circle-check text-gold-400 text-xs"></i>
+      <span id="toast-msg" class="font-semibold tracking-wide">Action Successful</span>
+    </div>
+  </div>
+
+  <div class="w-full max-w-[430px] bg-royalDark min-h-screen pb-32 relative shadow-2xl flex flex-col border-x border-gold-500/10 overflow-x-hidden">
+
+    <div class="px-4 pt-4 pb-2.5 flex items-center justify-between border-b border-white/5 bg-royalCard/40">
+      <a href="index.html" class="w-9 h-9 rounded-2xl bg-royalCard border border-gold-500/25 flex items-center justify-center text-gold-400 hover:border-gold-400 active:scale-95 transition shadow-sm">
+        <i class="fa-solid fa-arrow-left text-xs"></i>
+      </a>
+      <div class="text-center">
+        <span class="font-royal text-xs font-black tracking-widest text-gold-400 uppercase flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-crown text-xs"></i> Royal Hall of Fame
+        </span>
+        <span class="text-[9px] text-gray-400 uppercase tracking-wider block font-mono">শীর্ষ দরবার ও রাজকীয় পদবী</span>
+      </div>
+      <button id="court-refresh-btn" onclick="handleManualRefresh()" class="w-9 h-9 rounded-2xl bg-royalCard border border-gold-500/25 flex items-center justify-center text-gold-400 hover:border-gold-400 active:scale-95 transition shadow-sm" title="রিফ্রেশ">
+        <i class="fa-solid fa-rotate text-xs" id="refresh-icon"></i>
+      </button>
+    </div>
+
+    <main class="flex-1 px-4 pt-3 space-y-3.5">
+
+      <div class="bg-royalCard border border-gold-500/25 p-1 rounded-2xl flex items-center justify-between shadow-inner">
+        <button id="tab-chain-btn" onclick="switchChainView('chain')" class="flex-1 py-2.5 rounded-xl text-xs font-black transition-all duration-300 flex items-center justify-center gap-1.5 bg-gradient-to-r from-gold-600 via-gold-400 to-amber-500 text-black shadow-md">
+          <i class="fa-solid fa-trophy text-xs"></i>
+          <span>শীর্ষ দরবার (Leaderboard)</span>
+        </button>
+        <button id="tab-tiers-btn" onclick="switchChainView('tiers')" class="flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-400 hover:text-gold-300 transition-all duration-300 flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-medal text-xs"></i>
+          <span>১২টি শাহী পদবী</span>
+        </button>
+      </div>
+
+      <div class="bg-gradient-to-b from-[#1f190e] via-royalCard to-[#101016] border border-gold-500/40 rounded-3xl p-4 shadow-xl relative overflow-hidden shimmer-active space-y-3">
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="relative flex-shrink-0">
+              <div class="w-13 h-13 rounded-2xl p-0.5 bg-gradient-to-tr from-gold-600 via-gold-300 to-amber-200 shadow-md">
+                <img id="hero-user-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=140&q=80" alt="Avatar" class="w-12 h-12 rounded-[14px] object-cover border border-royalDark">
+              </div>
+            </div>
+            <div class="min-w-0 space-y-0.5">
+              <div class="flex items-center gap-1.5">
+                <h3 class="text-sm font-bold text-white truncate" id="hero-user-name">Royal Knight</h3>
+                <span class="bg-gold-500/20 text-gold-300 border border-gold-500/40 text-[8px] font-black px-1.5 py-0.2 rounded-full uppercase">YOU</span>
+              </div>
+              <div class="text-xs font-black text-gold-400 font-royal truncate" id="hero-rank-title">Level 1 (প্রহরী)</div>
+              <p class="text-[10px] text-gray-400 truncate">দরবারে র‍্যাঙ্ক: <strong class="text-emerald-400 font-bold" id="hero-user-standing">যাচাই হচ্ছে...</strong></p>
+            </div>
+          </div>
+          <div class="text-right flex-shrink-0 pl-3 border-l border-white/10">
+            <span class="text-2xl font-black text-white font-mono leading-none" id="hero-ref-count">0</span>
+            <span class="block text-[8px] text-gray-400 uppercase tracking-wider mt-1 font-semibold">সফল রেফার</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="chain-view" class="space-y-3.5">
+        <div class="pt-6 pb-2" id="podium-section">
+          <div class="grid grid-cols-3 gap-2 items-end">
+            <!-- #2 যুবরাজ -->
+            <div class="bg-royalCard border border-slate-400/35 rounded-2xl p-2.5 text-center flex flex-col items-center shadow-md">
+              <span class="bg-slate-300 text-black text-[9px] font-black px-2 py-0.2 rounded-full">#2 যুবরাজ</span>
+              <h5 class="font-bold text-[11px] text-white mt-1.5 truncate w-full" id="podium-2-name">--</h5>
+              <span class="text-xs font-black text-gray-200 font-mono mt-1" id="podium-2-count">0</span>
+            </div>
+
+            <!-- #1 বাদশা -->
+            <div class="gold-metallic-bg rounded-2xl p-3 text-center flex flex-col items-center gold-glow transform -translate-y-3.5 border-2 border-yellow-200 shimmer-active">
+              <span class="bg-black text-gold-300 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-gold-400">#1 বাদশা 👑</span>
+              <h5 class="font-black text-xs text-black mt-1.5 truncate w-full" id="podium-1-name">--</h5>
+              <span class="text-xs font-black text-black font-sans mt-1" id="podium-1-count">0</span>
+            </div>
+
+            <!-- #3 উজির -->
+            <div class="bg-royalCard border border-amber-700/40 rounded-2xl p-2.5 text-center flex flex-col items-center shadow-md">
+              <span class="bg-amber-600 text-white text-[9px] font-black px-2 py-0.2 rounded-full">#3 উজির</span>
+              <h5 class="font-bold text-[11px] text-white mt-1.5 truncate w-full" id="podium-3-name">--</h5>
+              <span class="text-xs font-black text-gray-200 font-mono mt-1" id="podium-3-count">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-1.5" id="court-dynamic-list"></div>
+      </div>
+
+      <div id="tiers-view" class="space-y-2.5 hidden">
+        <div id="ranks-crest-container" class="space-y-2"></div>
+      </div>
+
+    </main>
+
+    <!-- বটম বার -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-royalCard/95 backdrop-blur-lg border-t border-gold-500/20 py-2.5 px-3 z-50 rounded-t-2xl shadow-2xl">
+      <div class="grid grid-cols-5 text-center">
+        <a href="index.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-solid fa-house text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Home</span>
+        </a>
+        <a href="earn.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-regular fa-envelope-open text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Earn</span>
+        </a>
+        <a href="refer.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-solid fa-user-group text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Refer</span>
+        </a>
+        <a href="withdraw.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-regular fa-credit-card text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Withdraw</span>
+        </a>
+        <a href="profile.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-regular fa-user text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Profile</span>
+        </a>
+      </div>
+    </nav>
+
+  </div>
+
+  <script type="module">
+    import { 
+      initSuperEngine, 
+      triggerHaptic, 
+      getImmediateCachedProfile, 
+      calculateUserRank, 
+      ROYAL_HIERARCHY, 
+      tg, 
+      db 
+    } from './royal-core.js';
+
+    import { collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    let activeUserId = null;
+    let userReferrals = 0;
+
+    function loadCachedStateImmediately() {
+      try {
+        const cached = getImmediateCachedProfile();
+        if (cached.name) document.getElementById('hero-user-name').innerText = cached.name;
+        if (cached.referrals !== undefined) {
+          userReferrals = Number(cached.referrals);
+          document.getElementById('hero-ref-count').innerText = userReferrals;
+          const rankInfo = calculateUserRank(userReferrals);
+          document.getElementById('hero-rank-title').innerText = `LEVEL ${rankInfo.current.level} (${rankInfo.current.bn})`;
+        }
+      } catch (e) {}
+    }
+    loadCachedStateImmediately();
+
+    async function initHierarchyPage() {
+      try {
+        const { userId, userData } = await initSuperEngine();
+        activeUserId = userId;
+        userReferrals = Number(userData.user_referrals || 0);
+
+        document.getElementById('hero-user-name').innerText = userData.name || "Royal Knight";
+        if (userData.photoUrl) document.getElementById('hero-user-avatar').src = userData.photoUrl;
+        document.getElementById('hero-ref-count').innerText = userReferrals;
+        const rankInfo = calculateUserRank(userReferrals);
+        document.getElementById('hero-rank-title').innerText = `LEVEL ${rankInfo.current.level} (${rankInfo.current.bn})`;
+
+        await loadLeaderboard();
+        renderImperialCrests();
+      } catch (err) {}
+    }
+
+    function renderImperialCrests() {
+      const container = document.getElementById('ranks-crest-container');
+      if (!container) return;
+      container.innerHTML = '';
+      const { current } = calculateUserRank(userReferrals);
+
+      ROYAL_HIERARCHY.forEach(tier => {
+        const isCurrent = current.level === tier.level;
+        const isUnlocked = userReferrals >= tier.req;
+        const card = document.createElement('div');
+        card.className = isCurrent 
+          ? "bg-gradient-to-r from-royalCard to-[#261f0e] border-2 border-gold-400 rounded-2xl p-3 flex items-center justify-between"
+          : "bg-royalCard border border-white/5 rounded-2xl p-3 flex items-center justify-between";
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gold-500/10 flex items-center justify-center text-gold-400"><i class="fa-solid ${tier.icon}"></i></div>
+            <div>
+              <span class="text-[9px] text-gray-400 font-royal">LEVEL ${tier.level}</span>
+              <h4 class="text-xs font-bold text-white">${tier.title} (${tier.bn})</h4>
+            </div>
+          </div>
+          <span class="text-xs font-mono font-bold text-gold-400">${tier.req} Ref</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function loadLeaderboard() {
+      try {
+        const q = query(collection(db, "users"), orderBy("user_referrals", "desc"), limit(25));
+        const snap = await getDocs(q);
+        const leaders = [];
+        snap.forEach(d => leaders.push({ id: d.id, ...d.data() }));
+
+        if (leaders[0]) {
+          document.getElementById('podium-1-name').innerText = leaders[0].name || "Member";
+          document.getElementById('podium-1-count').innerText = leaders[0].user_referrals || 0;
+        }
+        if (leaders[1]) {
+          document.getElementById('podium-2-name').innerText = leaders[1].name || "Member";
+          document.getElementById('podium-2-count').innerText = leaders[1].user_referrals || 0;
+        }
+        if (leaders[2]) {
+          document.getElementById('podium-3-name').innerText = leaders[2].name || "Member";
+          document.getElementById('podium-3-count').innerText = leaders[2].user_referrals || 0;
+        }
+
+        const listContainer = document.getElementById('court-dynamic-list');
+        listContainer.innerHTML = '';
+        leaders.slice(3).forEach((ld, idx) => {
+          const row = document.createElement('div');
+          row.className = "bg-royalCard border border-white/5 p-2.5 rounded-2xl flex items-center justify-between";
+          row.innerHTML = `
+            <div class="flex items-center gap-2.5">
+              <span class="font-royal text-gold-400 text-xs w-6 text-center font-bold">#${idx + 4}</span>
+              <span class="text-xs font-bold text-white">${ld.name || "Member"}</span>
+            </div>
+            <span class="text-xs font-mono text-gold-400 font-bold">${ld.user_referrals || 0} Ref</span>
+          `;
+          listContainer.appendChild(row);
+        });
+      } catch (e) {}
+    }
+
+    window.switchChainView = function(view) {
+      triggerHaptic('light');
+      if (view === 'chain') {
+        document.getElementById('chain-view').classList.remove('hidden');
+        document.getElementById('tiers-view').classList.add('hidden');
+        document.getElementById('tab-chain-btn').className = "flex-1 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-gold-600 to-amber-500 text-black";
+        document.getElementById('tab-tiers-btn').className = "flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-400";
+      } else {
+        document.getElementById('tiers-view').classList.remove('hidden');
+        document.getElementById('chain-view').classList.add('hidden');
+        document.getElementById('tab-tiers-btn').className = "flex-1 py-2.5 rounded-xl text-xs font-black bg-gradient-to-r from-gold-600 to-amber-500 text-black";
+        document.getElementById('tab-chain-btn').className = "flex-1 py-2.5 rounded-xl text-xs font-bold text-gray-400";
+      }
+    };
+
+    window.handleManualRefresh = async function() {
+      const icon = document.getElementById('refresh-icon');
+      icon.classList.add('animate-spin');
+      await loadLeaderboard();
+      setTimeout(() => icon.classList.remove('animate-spin'), 600);
+    };
+
+    document.addEventListener('DOMContentLoaded', initHierarchyPage);
+  </script>
+</body>
+</html>

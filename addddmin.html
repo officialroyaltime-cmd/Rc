@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Royal Time - Admin Control Console</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 6.5.1 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Premium Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Confetti Script -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            royal: ['Cinzel', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            gold: {
+              100: '#FFFDEB',
+              200: '#FDEFB4',
+              300: '#F9DD78',
+              400: '#F3C544',
+              500: '#D4AF37',
+              600: '#AA820A',
+              700: '#7F6000',
+            },
+            royalDark: '#08080B',
+            royalCard: '#111218',
+            royalBorder: 'rgba(212, 175, 55, 0.15)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .gold-metallic-bg { background: linear-gradient(135deg, #FDECA6 0%, #D4AF37 38%, #936C0A 75%, #F7E493 100%); }
+    .gold-glow { box-shadow: 0 0 25px rgba(212, 175, 55, 0.2); }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #08080B; }
+    ::-webkit-scrollbar-thumb { background: #26273b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #D4AF37; }
+    .status-badge-active { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .status-badge-review { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .status-badge-suspended { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .status-badge-banned { background: rgba(153, 27, 27, 0.3); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.5); }
+    .ai-glow { box-shadow: 0 0 20px rgba(168, 85, 247, 0.25); }
+  </style>
+</head>
+
+<body class="bg-[#050508] text-gray-200 font-sans min-h-screen selection:bg-gold-500 selection:text-black">
+
+  <!-- গ্লোবাল টোস্ট অ্যালার্ট -->
+  <div id="admin-toast" class="fixed top-4 right-4 z-[300] transition-all duration-300 ease-out pointer-events-none opacity-0 translate-y-[-20px]">
+    <div class="px-4 py-2.5 rounded-xl bg-[#121319]/95 border border-gold-500/50 backdrop-blur-xl shadow-2xl flex items-center gap-2.5 text-xs text-gold-200">
+      <span class="w-2 h-2 rounded-full bg-gold-400 animate-ping"></span>
+      <i id="toast-icon" class="fa-solid fa-circle-check text-gold-400 text-xs"></i>
+      <span id="toast-msg" class="font-bold tracking-wide">Operation Successful</span>
+    </div>
+  </div>
+
+  <!-- ১. সার্ভার সাইড পিন অথেন্টিকেশন স্ক্রিন -->
+  <div id="admin-auth-screen" class="fixed inset-0 bg-[#08080B] z-[400] flex items-center justify-center p-4">
+    <div class="w-full max-w-[380px] bg-royalCard border border-gold-500/40 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl relative">
+      <div class="w-16 h-16 rounded-2xl bg-gold-500/15 border border-gold-500/40 flex items-center justify-center text-gold-400 text-2xl mx-auto shadow-inner">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <div>
+        <h2 class="text-lg font-black text-white font-royal tracking-wider">ROYAL TIME DESK</h2>
+        <p class="text-[11px] text-gray-400 mt-0.5">মাস্টার অ্যাডমিন কন্ট্রোল প্যানেলে প্রবেশ করুন</p>
+      </div>
+
+      <div class="space-y-2.5 pt-1">
+        <input 
+          type="password" 
+          id="admin-pin-input" 
+          maxlength="32" 
+          placeholder="ENTER MASTER PIN / SECRET" 
+          class="w-full h-11 bg-black/60 border border-gold-500/30 rounded-xl text-center text-xs font-mono tracking-widest text-gold-300 focus:outline-none focus:border-gold-400"
+          onkeydown="if(event.key === 'Enter') checkAdminPin()"
+        />
+        <button 
+          id="admin-login-btn"
+          onclick="checkAdminPin()" 
+          class="w-full py-3 rounded-xl bg-gradient-to-r from-gold-600 via-gold-400 to-amber-500 hover:brightness-110 active:scale-95 text-black font-black text-xs uppercase tracking-wider shadow-lg transition flex items-center justify-center gap-1.5"
+        >
+          <span>লগইন করুন</span>
+          <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ২. মূল ডেস্কটপ অ্যাডমিন কনসোল -->
+  <div id="admin-main-interface" class="hidden min-h-screen flex flex-col">
+
+    <!-- ডেস্কটপ স্লিম ও কমপ্যাক্ট টপবার -->
+    <header class="bg-royalCard/95 backdrop-blur-md border-b border-royalBorder px-4 lg:px-8 py-2.5 flex items-center justify-between sticky top-0 z-50">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gold-500/15 border border-gold-500/40 flex items-center justify-center text-gold-400 text-sm flex-shrink-0">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <h1 class="text-xs sm:text-sm font-black text-white font-royal tracking-wide truncate">ROYAL TIME CONSOLE</h1>
+            <span class="px-1.5 py-0.2 rounded bg-gold-500/15 text-gold-300 border border-gold-500/30 text-[9px] font-mono font-bold">PRO BACKEND</span>
+          </div>
+          <div class="flex items-center gap-2 pt-0.5 text-[10px]">
+            <span class="text-emerald-400 font-semibold flex items-center gap-1 font-sans">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> সুরক্ষিত ব্যাকএন্ড সিঙ্ক
+            </span>
+            <span class="text-gray-500 font-mono text-[9px] hidden sm:inline">• rc-project-a83cf</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="runAIFullAudit()" class="px-2.5 py-1.5 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-300 text-[11px] font-bold transition flex items-center gap-1.5 ai-glow">
+          <i class="fa-solid fa-brain text-[10px]"></i>
+          <span class="hidden sm:inline">AI স্ক্যান</span>
+        </button>
+        <button onclick="refreshActiveTab(true)" class="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-gold-500/15 border border-white/10 text-gold-300 text-[11px] font-bold transition flex items-center gap-1.5" title="রিফ্রেশ">
+          <i class="fa-solid fa-rotate text-[10px]" id="admin-refresh-spin"></i>
+          <span class="hidden sm:inline">রিফ্রেশ</span>
+        </button>
+        <button onclick="adminLogout()" class="px-2.5 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-[11px] font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-power-off text-[10px]"></i>
+          <span class="hidden sm:inline">লগআউট</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ডেস্কটপ ন্যাভবার ট্যাব -->
+    <div class="bg-[#090a0f] border-b border-white/5 px-4 lg:px-8 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+      <button onclick="switchTab('dashboard')" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-gold-500 text-black border border-gold-400 flex items-center gap-1.5 transition" id="tab-btn-dashboard">
+        <i class="fa-solid fa-chart-pie text-[11px]"></i> ওভারভিউ
+      </button>
+
+      <button onclick="switchTab('ai_guardian')" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-royalCard text-purple-300 border border-purple-500/30 hover:border-purple-400 flex items-center gap-1.5 transition relative" id="tab-btn-ai_guardian">
+        <i class="fa-solid fa-shield-virus text-purple-400 text-[11px]"></i> AI গার্ডিয়ান
+        <span id="badge-ai-threats" class="hidden ml-1 px-1.5 py-0.2 rounded-full bg-red-500 text-white text-[9px] font-bold font-mono">0</span>
+      </button>
+
+      <button onclick="switchTab('users')" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-royalCard text-gray-300 border border-white/5 hover:border-gold-500/40 flex items-center gap-1.5 transition" id="tab-btn-users">
+        <i class="fa-solid fa-users-gear text-amber-400 text-[11px]"></i> ইউজার ম্যানেজমেন্ট
+      </button>
+
+      <!-- নতুন প্রমো কোড ম্যানেজার ট্যাব -->
+      <button onclick="switchTab('promos')" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-royalCard text-gray-300 border border-white/5 hover:border-purple-500/40 flex items-center gap-1.5 transition" id="tab-btn-promos">
+        <i class="fa-solid fa-ticket text-purple-400 text-[11px]"></i> প্রমো কোড কন্ট্রোল
+      </button>
+
+      <button onclick="switchTab('reports')" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-royalCard text-gray-300 border border-white/5 hover:border-gold-500/40 flex items-center gap-1.5 transition relative" id="tab-btn-reports">
+        <i class="fa-solid fa-triangle-exclamation text-rose-400 text-[11px]"></i> রিপোর্ট ও আপিল
+        <span id="badge-pending-reports" class="hidden ml-1 px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-bold font-mono">0</span>
+      </button>
+
+      <button onclick="switchTab('deposits')" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-royalCard text-gray-300 border border-white/5 hover:border-gold-500/40 flex items-center gap-1.5 transition relative" id="tab-btn-deposits">
+        <i class="fa-solid fa-receipt text-pink-400 text-[11px]"></i> ডিপোজিট
+        <span id="badge-pending-deposits" class="hidden ml-1 px-1.5 py-0.2 rounded-full bg-pink-500 text-white text-[9px] font-bold font-mono">0</span>
+      </button>
+
+      <button onclick="switchTab('withdrawals')" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-royalCard text-gray-300 border border-white/5 hover:border-gold-500/40 flex items-center gap-1.5 transition relative" id="tab-btn-withdrawals">
+        <i class="fa-solid fa-wallet text-emerald-400 text-[11px]"></i> উইথড্রয়াল
+        <span id="badge-pending-withdrawals" class="hidden ml-1 px-1.5 py-0.2 rounded-full bg-emerald-500 text-black text-[9px] font-bold font-mono">0</span>
+      </button>
+
+      <button onclick="switchTab('proofs')" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-royalCard text-gray-300 border border-white/5 hover:border-gold-500/40 flex items-center gap-1.5 transition relative" id="tab-btn-proofs">
+        <i class="fa-solid fa-camera text-sky-400 text-[11px]"></i> প্রুফ রিভিউ
+        <span id="badge-pending-proofs" class="hidden ml-1 px-1.5 py-0.2 rounded-full bg-sky-500 text-white text-[9px] font-bold font-mono">0</span>
+      </button>
+
+      <button onclick="switchTab('tasks')" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-royalCard text-gray-300 border border-white/5 hover:border-gold-500/40 flex items-center gap-1.5 transition" id="tab-btn-tasks">
+        <i class="fa-solid fa-list-check text-gold-400 text-[11px]"></i> টাস্ক কন্ট্রোল
+      </button>
+
+      <button onclick="switchTab('banners')" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-royalCard text-gray-300 border border-white/5 hover:border-gold-500/40 flex items-center gap-1.5 transition" id="tab-btn-banners">
+        <i class="fa-solid fa-images text-purple-400 text-[11px]"></i> ব্যানার
+      </button>
+
+      <button onclick="switchTab('logs')" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-royalCard text-gray-300 border border-white/5 hover:border-gold-500/40 flex items-center gap-1.5 transition" id="tab-btn-logs">
+        <i class="fa-solid fa-clock-rotate-left text-cyan-400 text-[11px]"></i> অডিট লগ
+      </button>
+
+      <button onclick="switchTab('settings')" class="tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-royalCard text-gray-300 border border-white/5 hover:border-gold-500/40 flex items-center gap-1.5 transition" id="tab-btn-settings">
+        <i class="fa-solid fa-gear text-gray-400 text-[11px]"></i> কনফিগ
+      </button>
+    </div>
+
+    <!-- মেইন কন্টেন্ট এরিয়া -->
+    <main class="flex-1 p-4 lg:p-6 max-w-[1600px] w-full mx-auto space-y-5">
+
+      <!-- ==============================================================
+           ★ ট্যাব ১: ওভারভিউ ড্যাশবোর্ড
+      ================================================================== -->
+      <section id="tab-dashboard" class="tab-content space-y-4">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div class="bg-royalCard border border-gold-500/20 rounded-2xl p-3.5 space-y-1">
+            <span class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">মোট ইউজার</span>
+            <div class="text-xl font-black text-white font-mono" id="stat-total-users">--</div>
+            <span class="text-[9px] text-gray-500 font-sans">রেজিস্টার্ড ডাটাবেস</span>
+          </div>
+
+          <div class="bg-royalCard border border-emerald-500/30 rounded-2xl p-3.5 space-y-1">
+            <span class="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">সক্রিয় ইউজার</span>
+            <div class="text-xl font-black text-emerald-400 font-mono" id="stat-active-users">--</div>
+            <span class="text-[9px] text-gray-500 font-sans">Active Accounts</span>
+          </div>
+
+          <div class="bg-royalCard border border-amber-500/30 rounded-2xl p-3.5 space-y-1">
+            <span class="text-[9px] text-amber-400 font-bold uppercase tracking-wider">পর্যালোচনাধীন ইউজার</span>
+            <div class="text-xl font-black text-amber-400 font-mono" id="stat-review-users">--</div>
+            <span class="text-[9px] text-gray-500 font-sans">Under Review</span>
+          </div>
+
+          <div class="bg-royalCard border border-rose-500/30 rounded-2xl p-3.5 space-y-1">
+            <span class="text-[9px] text-rose-400 font-bold uppercase tracking-wider">ব্যান / স্থগিত ইউজার</span>
+            <div class="text-xl font-black text-rose-400 font-mono" id="stat-banned-users">--</div>
+            <span class="text-[9px] text-gray-500 font-sans">Suspended & Banned</span>
+          </div>
+
+          <div class="bg-royalCard border border-purple-500/30 rounded-2xl p-3.5 space-y-1">
+            <span class="text-[9px] text-purple-400 font-bold uppercase tracking-wider">আজকের নতুন ইউজার</span>
+            <div class="text-xl font-black text-purple-300 font-mono" id="stat-today-users">--</div>
+            <span class="text-[9px] text-gray-500 font-sans">Last 24 Hours</span>
+          </div>
+
+          <div class="bg-royalCard border border-pink-500/30 rounded-2xl p-3.5 space-y-1">
+            <span class="text-[9px] text-pink-400 font-bold uppercase tracking-wider">পেন্ডিং ডিপোজিট</span>
+            <div class="text-xl font-black text-pink-400 font-mono" id="stat-pending-deposits">--</div>
+            <span class="text-[9px] text-gray-500 font-sans">অ্যাক্টিভেশন রিকোয়েস্ট</span>
+          </div>
+
+          <div class="bg-royalCard border border-teal-500/30 rounded-2xl p-3.5 space-y-1">
+            <span class="text-[9px] text-teal-400 font-bold uppercase tracking-wider">পেন্ডিং উইথড্রয়াল</span>
+            <div class="text-xl font-black text-teal-300 font-mono" id="stat-pending-withdrawals">--</div>
+            <span class="text-[9px] text-gray-500 font-sans">ক্যাশআউট অপেক্ষমান</span>
+          </div>
+
+          <div class="bg-royalCard border border-sky-500/30 rounded-2xl p-3.5 space-y-1">
+            <span class="text-[9px] text-sky-400 font-bold uppercase tracking-wider">পেন্ডিং প্রুফ</span>
+            <div class="text-xl font-black text-sky-300 font-mono" id="stat-pending-proofs">--</div>
+            <span class="text-[9px] text-gray-500 font-sans">টাস্ক রিভিউ</span>
+          </div>
+
+          <div class="bg-royalCard border border-red-500/30 rounded-2xl p-3.5 space-y-1">
+            <span class="text-[9px] text-red-400 font-bold uppercase tracking-wider">নতুন রিপোর্ট / কমপ্লেইন</span>
+            <div class="text-xl font-black text-red-300 font-mono" id="stat-pending-reports">--</div>
+            <span class="text-[9px] text-gray-500 font-sans">Disputes & Appeals</span>
+          </div>
+
+          <div class="bg-royalCard border border-gold-500/30 rounded-2xl p-3.5 space-y-1">
+            <span class="text-[9px] text-gold-400 font-bold uppercase tracking-wider">মোট RC সার্কুলেশন</span>
+            <div class="text-xl font-black text-gold-300 font-mono" id="stat-total-coins">--</div>
+            <span class="text-[9px] text-gray-500 font-sans">সব ইউজারের ব্যালেন্স</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           ★ ট্যাব ২: AI গার্ডিয়ান
+      ================================================================== -->
+      <section id="tab-ai_guardian" class="tab-content hidden space-y-4">
+        <div class="bg-royalCard border border-purple-500/30 rounded-2xl p-5 shadow-xl space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 text-lg shadow-inner">
+                <i class="fa-solid fa-shield-virus animate-pulse"></i>
+              </div>
+              <div>
+                <h2 class="text-sm font-bold text-white">AI স্বয়ংক্রিয় ফ্রড ডিটেকশন ও থ্রেট হাব</h2>
+                <p class="text-[10px] text-gray-400">অস্বাভাবিক ব্যালেন্স গ্রোথ ও ফেক রেফারেল ডিটেকশন</p>
+              </div>
+            </div>
+            <button onclick="runAIFullAudit()" class="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs shadow-lg transition active:scale-95 flex items-center gap-1.5">
+              <i class="fa-solid fa-arrows-rotate text-[10px]" id="ai-scan-icon"></i>
+              <span>পূর্ণাঙ্গ অডিট চালান</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+            <div class="bg-black/50 border border-emerald-500/30 p-3 rounded-xl space-y-0.5">
+              <span class="text-[9px] text-emerald-400 font-bold uppercase">ঝুঁকিমুক্ত ইউজার</span>
+              <div class="text-xl font-black text-white font-mono" id="ai-safe-count">--</div>
+            </div>
+            <div class="bg-black/50 border border-amber-500/30 p-3 rounded-xl space-y-0.5">
+              <span class="text-[9px] text-amber-400 font-bold uppercase">সন্দেহজনক (Medium Risk)</span>
+              <div class="text-xl font-black text-amber-400 font-mono" id="ai-medium-count">--</div>
+            </div>
+            <div class="bg-black/50 border border-red-500/30 p-3 rounded-xl space-y-0.5">
+              <span class="text-[9px] text-red-400 font-bold uppercase">উচ্চ ঝুঁকি (High Risk)</span>
+              <div class="text-xl font-black text-red-400 font-mono" id="ai-high-count">--</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="ai-flagged-list" class="space-y-2"></div>
+      </section>
+
+      <!-- ==============================================================
+           ★ ট্যাব ৩: ইউজার ম্যানেজমেন্ট
+      ================================================================== -->
+      <section id="tab-users" class="tab-content hidden space-y-3">
+        <div class="bg-royalCard border border-white/10 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2 flex-1 min-w-[260px] max-w-md bg-black/60 border border-white/10 rounded-xl px-3 py-1.5">
+            <i class="fa-solid fa-magnifying-glass text-gray-400 text-xs"></i>
+            <input 
+              type="text" 
+              id="user-search-input" 
+              placeholder="Royal ID / User ID দিয়ে খুঁজুন..." 
+              class="w-full bg-transparent text-xs text-white focus:outline-none"
+              onkeydown="if(event.key === 'Enter') searchUsersCustom()"
+            />
+            <button onclick="searchUsersCustom()" class="px-2.5 py-1 rounded-lg bg-gold-500 hover:bg-gold-400 text-black font-extrabold text-[10px]">
+              খুঁজুন
+            </button>
+          </div>
+
+          <div class="flex items-center gap-1 overflow-x-auto text-[11px] font-bold">
+            <button onclick="filterUsersByStatus('all')" class="user-filter-btn px-2.5 py-1.5 rounded-lg bg-gold-500 text-black border border-gold-400" id="ufilter-all">সবাই</button>
+            <button onclick="filterUsersByStatus('active')" class="user-filter-btn px-2.5 py-1.5 rounded-lg bg-white/5 text-gray-400 border border-white/5 hover:border-emerald-500/40" id="ufilter-active">সক্রিয়</button>
+            <button onclick="filterUsersByStatus('in_review')" class="user-filter-btn px-2.5 py-1.5 rounded-lg bg-white/5 text-gray-400 border border-white/5 hover:border-amber-500/40" id="ufilter-in_review">পর্যালোচনাধীন</button>
+            <button onclick="filterUsersByStatus('suspended')" class="user-filter-btn px-2.5 py-1.5 rounded-lg bg-white/5 text-gray-400 border border-white/5 hover:border-rose-500/40" id="ufilter-suspended">সাময়িক বন্ধ</button>
+            <button onclick="filterUsersByStatus('banned')" class="user-filter-btn px-2.5 py-1.5 rounded-lg bg-white/5 text-gray-400 border border-white/5 hover:border-red-600/40" id="ufilter-banned">স্থায়ী ব্যান</button>
+          </div>
+        </div>
+
+        <div class="bg-royalCard border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-300">
+              <thead class="bg-black/80 text-gray-400 uppercase text-[9px] tracking-wider border-b border-white/5">
+                <tr>
+                  <th class="p-3">রয়্যাল আইডি ও প্রোফাইল</th>
+                  <th class="p-3">AI Risk</th>
+                  <th class="p-3">ব্যালেন্স (RC)</th>
+                  <th class="p-3">রেফারেল</th>
+                  <th class="p-3">স্ট্যাটাস</th>
+                  <th class="p-3">তারিখ</th>
+                  <th class="p-3 text-right">অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body" class="divide-y divide-white/5 font-mono">
+                <tr>
+                  <td colspan="7" class="p-6 text-center text-gray-500 font-sans">
+                    <i class="fa-solid fa-spinner animate-spin text-gold-400 text-sm mr-1"></i> ইউজার ডাটা লোড হচ্ছে...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="p-3 bg-black/40 border-t border-white/5 flex items-center justify-between text-xs font-sans">
+            <span class="text-gray-400 font-mono text-[11px]" id="users-pagination-info">Showing users</span>
+            <button id="users-load-more-btn" onclick="loadMoreUsers()" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-gold-500/20 text-gold-300 border border-white/10 font-bold transition flex items-center gap-1.5 text-xs">
+              <span>পরবর্তী ১৫ জন লোড করুন</span>
+              <i class="fa-solid fa-arrow-down text-[9px]"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           ★ ট্যাব: প্রমো কোড ম্যানেজার (DEDICATED PROMO CODE MANAGER TAB)
+      ================================================================== -->
+      <section id="tab-promos" class="tab-content hidden space-y-4">
+        <!-- নতুন প্রমো কোড তৈরি কার্ড -->
+        <div class="bg-royalCard border border-purple-500/30 rounded-2xl p-5 shadow-xl space-y-3.5">
+          <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 text-sm">
+                <i class="fa-solid fa-ticket"></i>
+              </div>
+              <div>
+                <h3 class="text-xs sm:text-sm font-bold text-white font-royal">নতুন প্রমো কোড তৈরি করুন</h3>
+                <p class="text-[10px] text-gray-400">কোড তৈরি করলে ইউজাররা প্রোফাইল পেজ থেকে রিডিম করে ব্যালেন্স পাবে</p>
+              </div>
+            </div>
+            <span class="px-2.5 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-300 text-[10px] font-mono font-bold">
+              Promo Engine
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs">
+            <div>
+              <label class="block text-gray-400 mb-1 font-bold">প্রমো কোড নাম (Code)</label>
+              <input 
+                type="text" 
+                id="promo-input-code" 
+                placeholder="উদাঃ ROYAL50" 
+                class="w-full h-10 bg-black/60 border border-purple-500/30 rounded-xl px-3 text-white font-mono uppercase focus:outline-none focus:border-purple-400"
+              />
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1 font-bold">রিওয়ার্ড অ্যামাউন্ট (RC)</label>
+              <input 
+                type="number" 
+                id="promo-input-reward" 
+                placeholder="50.00" 
+                step="5"
+                class="w-full h-10 bg-black/60 border border-purple-500/30 rounded-xl px-3 text-white font-mono focus:outline-none focus:border-purple-400"
+              />
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1 font-bold">ব্যবহারের সর্বোচ্চ লিমিট</label>
+              <input 
+                type="number" 
+                id="promo-input-limit" 
+                placeholder="500 (০ = আনলিমিটেড)" 
+                class="w-full h-10 bg-black/60 border border-purple-500/30 rounded-xl px-3 text-white font-mono focus:outline-none focus:border-purple-400"
+              />
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1 font-bold">মেয়াদ উত্তীর্ণের তারিখ</label>
+              <input 
+                type="date" 
+                id="promo-input-expiry" 
+                class="w-full h-10 bg-black/60 border border-purple-500/30 rounded-xl px-3 text-white font-mono focus:outline-none focus:border-purple-400"
+              />
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1 font-bold">স্ট্যাটাস</label>
+              <select id="promo-input-status" class="w-full h-10 bg-black/60 border border-purple-500/30 rounded-xl px-3 text-white font-bold focus:outline-none focus:border-purple-400">
+                <option value="active" class="bg-black text-emerald-400">Active (সক্রিয়)</option>
+                <option value="disabled" class="bg-black text-red-400">Disabled (নিষ্ক্রিয়)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="pt-1">
+            <button 
+              id="btn-create-promo"
+              onclick="createNewPromoCodeBackend()" 
+              class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-500 to-purple-500 hover:brightness-110 active:scale-95 text-white font-extrabold text-xs shadow-lg transition flex items-center gap-1.5"
+            >
+              <i class="fa-solid fa-plus text-[10px]"></i>
+              <span>প্রমো কোড সংরক্ষণ করুন</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- লাইভ প্রমো কোড তালিকা টেবিল -->
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+              <i class="fa-solid fa-list-check text-purple-400"></i> বিদ্যমান প্রমো কোড ও ব্যবহার ট্র্যাকিং
+            </h3>
+            <span class="text-xs text-purple-300 font-mono" id="promo-list-count">0 Codes</span>
+          </div>
+
+          <div class="bg-royalCard border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs text-gray-300">
+                <thead class="bg-black/60 text-gray-400 uppercase text-[9px] tracking-wider border-b border-white/5">
+                  <tr>
+                    <th class="p-3">প্রমো কোড</th>
+                    <th class="p-3">রিওয়ার্ড</th>
+                    <th class="p-3">ব্যবহারের অগ্রগতি (Used / Limit)</th>
+                    <th class="p-3">মেয়াদ</th>
+                    <th class="p-3">স্ট্যাটাস</th>
+                    <th class="p-3 text-right">অ্যাকশন</th>
+                  </tr>
+                </thead>
+                <tbody id="promo-table-body" class="divide-y divide-white/5 font-mono">
+                  <tr>
+                    <td colspan="6" class="p-6 text-center text-gray-500 font-sans">প্রমো কোড লোড হচ্ছে...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           ★ ট্যাব ৪: রিপোর্ট ও আপিল
+      ================================================================== -->
+      <section id="tab-reports" class="tab-content hidden space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+            <i class="fa-solid fa-triangle-exclamation text-rose-400"></i> ইউজার রিপোর্ট ও আপিল
+          </h2>
+          <span class="text-xs text-gray-400 font-mono" id="reports-count-tag">0 Reports</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="reports-list-grid"></div>
+      </section>
+
+      <!-- ==============================================================
+           ★ ট্যাব ৫: ডিপোজিট
+      ================================================================== -->
+      <section id="tab-deposits" class="tab-content hidden space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+            <i class="fa-solid fa-receipt text-pink-400"></i> পেন্ডিং ডিপোজিট রিকোয়েস্ট তালিকা
+          </h2>
+          <span class="text-xs text-gray-400 font-mono" id="deposit-count-tag">0 Requests</span>
+        </div>
+        <div class="bg-royalCard border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-300">
+              <thead class="bg-black/60 text-gray-400 uppercase text-[9px] tracking-wider border-b border-white/5">
+                <tr>
+                  <th class="p-3">ইউজার / নাম</th>
+                  <th class="p-3">মেথড / নম্বর</th>
+                  <th class="p-3">TrxID</th>
+                  <th class="p-3">পরিমাণ</th>
+                  <th class="p-3">স্ক্রিনশট</th>
+                  <th class="p-3">তারিখ</th>
+                  <th class="p-3 text-right">অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody id="deposits-table-body" class="divide-y divide-white/5 font-mono"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           ★ ট্যাব ৬: উইথড্রয়াল
+      ================================================================== -->
+      <section id="tab-withdrawals" class="tab-content hidden space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+            <i class="fa-solid fa-wallet text-emerald-400"></i> পেন্ডিং ক্যাশআউট তালিকা
+          </h2>
+          <span class="text-xs text-gray-400 font-mono" id="withdraw-count-tag">0 Requests</span>
+        </div>
+        <div class="bg-royalCard border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-300">
+              <thead class="bg-black/60 text-gray-400 uppercase text-[9px] tracking-wider border-b border-white/5">
+                <tr>
+                  <th class="p-3">ইউজার আইডি</th>
+                  <th class="p-3">নম্বর</th>
+                  <th class="p-3">মেথড</th>
+                  <th class="p-3">গ্রস RC</th>
+                  <th class="p-3">ফি</th>
+                  <th class="p-3">নেট পাবেন</th>
+                  <th class="p-3">তারিখ</th>
+                  <th class="p-3 text-right">অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody id="withdrawals-table-body" class="divide-y divide-white/5 font-mono"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           ★ ট্যাব ৭: প্রুফ রিভিউ
+      ================================================================== -->
+      <section id="tab-proofs" class="tab-content hidden space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+            <i class="fa-solid fa-camera text-sky-400"></i> টাস্ক প্রুফ রিভিউ তালিকা
+          </h2>
+          <span class="text-xs text-gray-400 font-mono" id="proof-count-tag">0 Submissions</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="proofs-cards-grid"></div>
+      </section>
+
+      <!-- ==============================================================
+           ★ ট্যাব ৮: টাস্ক কন্ট্রোল
+      ================================================================== -->
+      <section id="tab-tasks" class="tab-content hidden space-y-4">
+        <div class="bg-royalCard border border-gold-500/25 rounded-2xl p-5 shadow-xl space-y-3">
+          <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+            <i class="fa-solid fa-plus text-gold-400"></i> নতুন রিয়েল ক্যাম্পেইন / সোশ্যাল টাস্ক তৈরি করুন
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div>
+              <label class="block text-gray-400 mb-1">টাস্ক টাইটেল</label>
+              <input type="text" id="task-create-title" placeholder="উদাঃ টিকটক পেজ ফলো করুন" class="w-full h-9 bg-black/60 border border-white/10 rounded-xl px-3 text-white focus:outline-none focus:border-gold-400">
+            </div>
+
+            <div>
+              <label class="block text-gold-400 font-bold mb-1">সোশ্যাল মিডিয়া ক্যাটাগরি</label>
+              <select id="task-create-category" class="w-full h-9 bg-black/60 border border-gold-500/30 rounded-xl px-3 text-white focus:outline-none focus:border-gold-400 font-medium">
+                <option value="tiktok">TikTok (টিকটক)</option>
+                <option value="telegram">Telegram (টেলিগ্রাম)</option>
+                <option value="youtube">YouTube (ইউটিউব)</option>
+                <option value="facebook">Facebook (ফেসবুক)</option>
+                <option value="instagram">Instagram (ইনস্টাগ্রাম)</option>
+                <option value="twitter">X / Twitter (টুইটার)</option>
+                <option value="threads">Threads (থ্রেডস)</option>
+                <option value="discord">Discord (ডিসকর্ড)</option>
+                <option value="whatsapp">WhatsApp (হোয়াটসঅ্যাপ)</option>
+                <option value="linkedin">LinkedIn (লিঙ্কডইন)</option>
+                <option value="snapchat">Snapchat (স্ন্যাপচ্যাট)</option>
+                <option value="pinterest">Pinterest (পিন্টারেস্ট)</option>
+                <option value="reddit">Reddit (রেডিট)</option>
+                <option value="web">Web & Apps (ওয়েবসাইট বা অ্যাপ)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1">ভেরিফিকেশন টাইপ</label>
+              <select id="task-create-type" class="w-full h-9 bg-black/60 border border-white/10 rounded-xl px-3 text-white focus:outline-none focus:border-gold-400">
+                <option value="instant">ইনস্ট্যান্ট টাইমার (কাউন্টডাউন)</option>
+                <option value="proof">স্ক্রিনশট প্রুফ (অ্যাডমিন ভেরিফাই)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1">রিওয়ার্ড অ্যামাউন্ট (RC)</label>
+              <input type="number" id="task-create-reward" placeholder="20.00" step="1" class="w-full h-9 bg-black/60 border border-white/10 rounded-xl px-3 text-white font-mono focus:outline-none focus:border-gold-400">
+            </div>
+
+            <div>
+              <label class="block text-gold-400 font-bold mb-1">ক্যাম্পেইন কোটা / টার্গেট লিমিট (জন)</label>
+              <input type="number" id="task-create-limit" placeholder="উদাঃ 500 (খালি রাখলে আনলিমিটেড)" class="w-full h-9 bg-black/60 border border-gold-500/30 rounded-xl px-3 text-white font-mono focus:outline-none focus:border-gold-400">
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1">টাইমার সেকেন্ড (ইনস্ট্যান্টের জন্য)</label>
+              <input type="number" id="task-create-timer" placeholder="8" value="8" class="w-full h-9 bg-black/60 border border-white/10 rounded-xl px-3 text-white font-mono focus:outline-none focus:border-gold-400">
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-gray-400 mb-1">টাস্ক লিঙ্ক (URL)</label>
+              <input type="url" id="task-create-link" placeholder="https://..." class="w-full h-9 bg-black/60 border border-white/10 rounded-xl px-3 text-white focus:outline-none focus:border-gold-400">
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1">ব্যাজ টেক্সট</label>
+              <input type="text" id="task-create-badge" placeholder="উদাঃ হট অফার" class="w-full h-9 bg-black/60 border border-white/10 rounded-xl px-3 text-white focus:outline-none focus:border-gold-400">
+            </div>
+
+            <div class="md:col-span-3">
+              <label class="block text-gray-400 mb-1">ছোট নির্দেশনা</label>
+              <input type="text" id="task-create-desc" placeholder="উদাঃ লিংকে ক্লিক করে ফলো করুন" class="w-full h-9 bg-black/60 border border-white/10 rounded-xl px-3 text-white focus:outline-none focus:border-gold-400">
+            </div>
+          </div>
+
+          <button onclick="createNewTaskInFirestore()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-gold-600 to-gold-400 text-black font-extrabold text-xs shadow-md active:scale-95 transition">
+            টাস্ক পাবলিশ করুন
+          </button>
+        </div>
+
+        <div id="admin-tasks-list" class="space-y-2"></div>
+      </section>
+
+      <!-- ==============================================================
+           ★ ট্যাব ৯: ব্যানার ও অডিট লগ
+      ================================================================== -->
+      <section id="tab-banners" class="tab-content hidden space-y-4">
+        <div id="admin-banners-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+      </section>
+
+      <section id="tab-logs" class="tab-content hidden space-y-3">
+        <div class="bg-royalCard border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-gray-300">
+              <thead class="bg-black/60 text-gray-400 uppercase text-[9px] tracking-wider border-b border-white/5">
+                <tr>
+                  <th class="p-3">অ্যাকশন</th>
+                  <th class="p-3">টার্গেট</th>
+                  <th class="p-3">বিবরণী</th>
+                  <th class="p-3">অ্যাডমিন</th>
+                  <th class="p-3 text-right">তারিখ</th>
+                </tr>
+              </thead>
+              <tbody id="audit-table-body" class="divide-y divide-white/5 font-mono"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           ★ ট্যাব ১০: সেটিংস
+      ================================================================== -->
+      <section id="tab-settings" class="tab-content hidden space-y-4">
+        <div class="bg-royalCard border border-gold-500/25 rounded-2xl p-5 shadow-xl space-y-3.5">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div class="bg-black/40 border border-gold-500/20 p-2.5 rounded-xl space-y-1">
+              <label class="block text-gold-300 font-bold text-[11px]">নতুন ইউজারের ওয়েলকাম বোনাস (RC)</label>
+              <input type="number" id="cfg-signup-bonus" placeholder="15.00" class="w-full h-9 bg-black/60 border border-white/10 rounded-lg px-3 text-white font-mono focus:outline-none focus:border-gold-400">
+            </div>
+
+            <div class="bg-black/40 border border-emerald-500/30 p-2.5 rounded-xl space-y-1">
+              <label class="block text-emerald-400 font-bold text-[11px]">প্রতি ভিডিও বিজ্ঞাপনের আয় (RC)</label>
+              <input type="number" id="cfg-ad-reward" placeholder="0.20" step="0.05" class="w-full h-9 bg-black/60 border border-emerald-500/30 rounded-lg px-3 text-white font-mono focus:outline-none focus:border-emerald-400">
+            </div>
+
+            <div class="bg-black/40 border border-emerald-500/30 p-2.5 rounded-xl space-y-1">
+              <label class="block text-emerald-400 font-bold text-[11px]">দৈনিক বিজ্ঞাপন দেখার লিমিট (টি)</label>
+              <input type="number" id="cfg-daily-ad-limit" placeholder="50" class="w-full h-9 bg-black/60 border border-emerald-500/30 rounded-lg px-3 text-white font-mono focus:outline-none focus:border-emerald-400">
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1">প্রতি রেফারে আপলাইনার পাবে (RC)</label>
+              <input type="number" id="cfg-refer-reward" class="w-full h-9 bg-black/60 border border-white/10 rounded-lg px-3 text-white font-mono focus:outline-none focus:border-gold-400">
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1">উইথড্র করতে প্রয়োজনীয় রেফার সংখ্যা</label>
+              <input type="number" id="cfg-req-referrals" class="w-full h-9 bg-black/60 border border-white/10 rounded-lg px-3 text-white font-mono focus:outline-none focus:border-gold-400">
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1">সর্বনিম্ন উইথড্র লিমিট (RC)</label>
+              <input type="number" id="cfg-min-withdraw" class="w-full h-9 bg-black/60 border border-white/10 rounded-lg px-3 text-white font-mono focus:outline-none focus:border-gold-400">
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1">উইথড্রর পূর্বে বাধ্যতামূলক অ্যাড (টি)</label>
+              <input type="number" id="cfg-req-ads" class="w-full h-9 bg-black/60 border border-white/10 rounded-lg px-3 text-white font-mono focus:outline-none focus:border-gold-400">
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1">মনিটেগ অ্যাড জোন আইডি</label>
+              <input type="text" id="cfg-monetag-zone" class="w-full h-9 bg-black/60 border border-white/10 rounded-lg px-3 text-white font-mono focus:outline-none focus:border-gold-400">
+            </div>
+
+            <div>
+              <label class="block text-gray-400 mb-1">অ্যাকাউন্ট অ্যাক্টিভেশন ফি (টাকা)</label>
+              <input type="number" id="cfg-act-fee" class="w-full h-9 bg-black/60 border border-white/10 rounded-lg px-3 text-white font-mono focus:outline-none focus:border-gold-400">
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button onclick="saveGlobalAdminSettings()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-extrabold text-xs shadow-lg active:scale-95 transition">
+              সকল সেটিংস সংরক্ষণ করুন
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ইমেজ ভিউয়ার মডাল -->
+  <div id="image-viewer-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[380] hidden flex items-center justify-center p-4">
+    <div class="bg-royalCard border border-white/10 w-full max-w-2xl rounded-3xl p-4 space-y-3 relative shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/10 pb-2">
+        <span class="text-xs font-bold text-white">ডকুমেন্ট ভিউ</span>
+        <button onclick="closeImageViewer()" class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+      <div class="max-h-[80vh] overflow-y-auto flex items-center justify-center p-2 bg-black/60 rounded-2xl">
+        <img id="image-modal-img" src="" alt="Proof Preview" class="w-full max-h-[75vh] object-contain rounded-xl" />
+      </div>
+    </div>
+  </div>
+
+  <!-- স্ক্রিপ্ট ইঞ্জিন -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { 
+      getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, 
+      collection, addDoc, serverTimestamp, query, where, getDocs, limit 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCTxv5W3HRBplhnMejWVxmlZOo0O7VDlL8",
+      authDomain: "rc-project-a83cf.firebaseapp.com",
+      projectId: "rc-project-a83cf",
+      storageBucket: "rc-project-a83cf.firebasestorage.app",
+      messagingSenderId: "957061655551",
+      appId: "1:957061655551:web:64bdf935cf61a305de95ca",
+      measurementId: "G-6X6D0B7EZ8"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let activeTab = 'dashboard';
+    let adminToken = sessionStorage.getItem('royal_admin_token') || null;
+
+    // Helper for backend requests with Admin JWT
+    async function adminFetch(endpoint, options = {}) {
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(adminToken ? { 'Authorization': `Bearer ${adminToken}` } : {}),
+        ...(options.headers || {})
+      };
+      try {
+        const res = await fetch(endpoint, { ...options, headers });
+        return await res.json();
+      } catch (err) {
+        console.warn('Admin fetch error:', err);
+        return { success: false, error: err.message };
+      }
+    }
+
+    // ১. সার্ভার সাইড অ্যাডমিন লগইন (PIN/Secret)
+    window.checkAdminPin = async function() {
+      const pin = document.getElementById('admin-pin-input').value.trim();
+      const loginBtn = document.getElementById('admin-login-btn');
+      
+      if (!pin) {
+        showToast('পিন কোড লিখুন!', 'fa-circle-xmark');
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>যাচাই হচ্ছে...</span>`;
+
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin })
+        });
+
+        const data = await res.json();
+        if (data.success && data.token) {
+          adminToken = data.token;
+          sessionStorage.setItem('royal_admin_token', adminToken);
+          sessionStorage.setItem('royal_admin_authed', 'true');
+          
+          document.getElementById('admin-auth-screen').classList.add('hidden');
+          document.getElementById('admin-main-interface').classList.remove('hidden');
+          showToast('মাস্টার কন্ট্রোল প্যানেলে স্বাগতম! 👑');
+          switchTab('dashboard');
+        } else {
+          showToast(data.error || 'ভুল পিন দিয়েছেন!', 'fa-circle-xmark');
+        }
+      } catch (err) {
+        // Fallback for offline dev
+        if (pin === '778899') {
+          sessionStorage.setItem('royal_admin_authed', 'true');
+          document.getElementById('admin-auth-screen').classList.add('hidden');
+          document.getElementById('admin-main-interface').classList.remove('hidden');
+          switchTab('dashboard');
+        } else {
+          showToast('সার্ভার সংযোগ সমস্যা', 'fa-triangle-exclamation');
+        }
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = `<span>লগইন করুন</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>`;
+      }
+    };
+
+    window.adminLogout = function() {
+      sessionStorage.clear();
+      location.reload();
+    };
+
+    // ২. ট্যাব স্যুইচার
+    window.switchTab = async function(tabKey) {
+      activeTab = tabKey;
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.className = "tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-royalCard text-gray-300 border border-white/5 hover:border-gold-500/40 flex items-center gap-1.5 transition";
+      });
+
+      const targetContent = document.getElementById(`tab-${tabKey}`);
+      const targetBtn = document.getElementById(`tab-btn-${tabKey}`);
+
+      if (targetContent) targetContent.classList.remove('hidden');
+      if (targetBtn) {
+        targetBtn.className = "tab-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap bg-gold-500 text-black border border-gold-400 flex items-center gap-1.5 transition";
+      }
+
+      await loadTabData(tabKey);
+    };
+
+    async function loadTabData(tabKey) {
+      if (tabKey === 'dashboard') await loadDashboardStats();
+      else if (tabKey === 'promos') await loadPromoCodesBackend();
+      else if (tabKey === 'deposits') await loadPendingDeposits();
+      else if (tabKey === 'withdrawals') await loadPendingWithdrawals();
+      else if (tabKey === 'tasks') await loadLiveTasks();
+      else if (tabKey === 'reports') await loadReports();
+    }
+
+    // ৩. ড্যাশবোর্ড পরিসংখ্যান
+    async function loadDashboardStats() {
+      const res = await adminFetch('/api/admin/stats');
+      if (res.success && res.stats) {
+        const s = res.stats;
+        document.getElementById('stat-total-users').innerText = s.totalUsers;
+        document.getElementById('stat-active-users').innerText = s.activeUsers;
+        document.getElementById('stat-review-users').innerText = s.reviewUsers;
+        document.getElementById('stat-banned-users').innerText = s.bannedUsers;
+        document.getElementById('stat-today-users').innerText = s.todayUsers;
+        document.getElementById('stat-total-coins').innerText = `${s.totalCoins} RC`;
+        document.getElementById('stat-pending-deposits').innerText = s.pendingDeposits;
+        document.getElementById('stat-pending-withdrawals').innerText = s.pendingWithdrawals;
+        document.getElementById('stat-pending-proofs').innerText = s.pendingProofs;
+        document.getElementById('stat-pending-reports').innerText = s.pendingReports;
+      }
+    }
+
+    // ৪. প্রমো কোড কন্ট্রোল ইঞ্জিন (Promo Code Manager Backend API)
+    window.createNewPromoCodeBackend = async function() {
+      const code = document.getElementById('promo-input-code').value.trim();
+      const reward = parseFloat(document.getElementById('promo-input-reward').value);
+      const maxLimit = parseInt(document.getElementById('promo-input-limit').value) || 0;
+      const expiry = document.getElementById('promo-input-expiry').value;
+      const status = document.getElementById('promo-input-status').value;
+
+      if (!code || isNaN(reward) || reward <= 0) {
+        showToast('প্রমো কোডের নাম এবং সঠিক রিওয়ার্ড দিন!', 'fa-circle-xmark');
+        return;
+      }
+
+      const btn = document.getElementById('btn-create-promo');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> সংরক্ষণ হচ্ছে...`;
+
+      const res = await adminFetch('/api/admin/promos/create', {
+        method: 'POST',
+        body: JSON.stringify({
+          code,
+          reward,
+          maxLimit,
+          expiryDate: expiry || null,
+          status
+        })
+      });
+
+      if (res.success) {
+        confetti({ particleCount: 40, spread: 60, origin: { y: 0.8 } });
+        showToast(`প্রমো কোড '${code.toUpperCase()}' তৈরি হয়েছে!`);
+        document.getElementById('promo-input-code').value = '';
+        document.getElementById('promo-input-reward').value = '';
+        document.getElementById('promo-input-limit').value = '';
+        document.getElementById('promo-input-expiry').value = '';
+        await loadPromoCodesBackend();
+      } else {
+        showToast(res.error || 'প্রমো কোড তৈরি ব্যর্থ হয়েছে', 'fa-triangle-exclamation');
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = `<i class="fa-solid fa-plus text-[10px]"></i> <span>প্রমো কোড সংরক্ষণ করুন</span>`;
+    };
+
+    async function loadPromoCodesBackend() {
+      const tbody = document.getElementById('promo-table-body');
+      tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-500 font-sans"><i class="fa-solid fa-spinner animate-spin mr-1 text-purple-400"></i> প্রমো কোড লোড হচ্ছে...</td></tr>`;
+
+      const res = await adminFetch('/api/admin/promos/list');
+      const countTag = document.getElementById('promo-list-count');
+
+      if (res.success && Array.isArray(res.promos)) {
+        const list = res.promos;
+        countTag.innerText = `${list.length} Codes`;
+
+        if (list.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-500 font-sans">কোনো প্রমো কোড তৈরি নেই। উপরের ফর্ম দিয়ে তৈরি করুন।</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = '';
+        list.forEach(p => {
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-white/5 transition";
+          const isAct = p.status === 'active';
+          const maxText = p.maxLimit > 0 ? `${p.usedCount || 0} / ${p.maxLimit}` : `${p.usedCount || 0} (আনলিমিটেড)`;
+
+          tr.innerHTML = `
+            <td class="p-3">
+              <span class="font-mono font-black text-purple-300 text-xs bg-purple-500/10 px-2.5 py-1 rounded-lg border border-purple-500/25">${p.code}</span>
+            </td>
+            <td class="p-3 font-bold text-gold-400 font-mono">+${Number(p.reward).toFixed(2)} RC</td>
+            <td class="p-3 font-mono text-gray-300">${maxText}</td>
+            <td class="p-3 text-gray-400 text-[10px] font-sans">${p.expiryDate || 'আজীবন'}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${isAct ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}">
+                ${isAct ? 'Active' : 'Disabled'}
+              </span>
+            </td>
+            <td class="p-3 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <button onclick="togglePromoBackend('${p.code}')" class="px-2.5 py-1 rounded-lg text-xs font-bold ${isAct ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'} active:scale-95 transition">
+                  ${isAct ? 'বন্ধ করুন' : 'চালু করুন'}
+                </button>
+                <button onclick="deletePromoBackend('${p.code}')" class="px-2 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/30 text-red-400 text-xs font-bold transition">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    window.togglePromoBackend = async function(code) {
+      const res = await adminFetch(`/api/admin/promos/${code}/toggle`, { method: 'POST' });
+      if (res.success) {
+        showToast(`প্রমো কোড স্ট্যাটাস পরিবর্তন হয়েছে!`);
+        await loadPromoCodesBackend();
+      }
+    };
+
+    window.deletePromoBackend = async function(code) {
+      if (!confirm(`আপনি কি নিশ্চিত '${code}' প্রমো কোডটি মুছে ফেলতে চান?`)) return;
+      const res = await adminFetch(`/api/admin/promos/${code}`, { method: 'DELETE' });
+      if (res.success) {
+        showToast(`প্রমো কোড '${code}' ডিলিট হয়েছে`);
+        await loadPromoCodesBackend();
+      }
+    };
+
+    // ৫. ডিপোজিট অ্যাপ্রুভ / রিজেক্ট (Backend API)
+    async function loadPendingDeposits() {
+      const tbody = document.getElementById('deposits-table-body');
+      tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-500">ডিপোজিট লোড হচ্ছে...</td></tr>`;
+
+      const q = query(collection(db, "deposits"), where("status", "==", "pending"));
+      const snap = await getDocs(q);
+      document.getElementById('deposit-count-tag').innerText = `${snap.size} Requests`;
+
+      if (snap.empty) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-500 font-sans">কোনো পেন্ডিং ডিপোজিট রিকোয়েস্ট নেই</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      snap.forEach(d => {
+        const data = d.data();
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-white/5 transition";
+        tr.innerHTML = `
+          <td class="p-3 font-bold text-white">${data.userName || 'Member'}<span class="block text-[10px] text-gray-500">${data.royalId || data.userId}</span></td>
+          <td class="p-3 uppercase font-bold text-pink-400">${data.method}<span class="block text-gray-400 text-[11px]">${data.senderNumber}</span></td>
+          <td class="p-3 font-mono text-gold-400 font-bold">${data.trxId}</td>
+          <td class="p-3 text-white font-bold">৳${Number(data.amount).toFixed(2)}</td>
+          <td class="p-3">
+            ${data.screenshotImage ? `<button onclick="viewImageDirect('${data.screenshotImage}')" class="px-2 py-1 rounded bg-white/10 text-gold-300 text-[10px]">ছবি দেখুন</button>` : 'নেই'}
+          </td>
+          <td class="p-3 text-gray-400 text-[10px]">সম্প্রতি</td>
+          <td class="p-3 text-right">
+            <button onclick="handleDepositActionBackend('${d.id}', 'approve')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow">Approve</button>
+            <button onclick="handleDepositActionBackend('${d.id}', 'reject')" class="px-2.5 py-1 rounded-lg bg-red-600/30 text-red-300 font-bold text-xs ml-1">Reject</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.handleDepositActionBackend = async function(depositId, action) {
+      if (!confirm(`ডিপোজিটটি ${action} করতে চান?`)) return;
+      const res = await adminFetch('/api/admin/deposits/action', {
+        method: 'POST',
+        body: JSON.stringify({ depositId, action })
+      });
+      if (res.success) {
+        showToast(`ডিপোজিট সফলভাবে ${action} হয়েছে!`);
+        await loadPendingDeposits();
+      }
+    };
+
+    // ৬. উইথড্রয়াল পেইড / রিফান্ড (Backend API with Telegram Receipt)
+    async function loadPendingWithdrawals() {
+      const tbody = document.getElementById('withdrawals-table-body');
+      tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-500">লোড হচ্ছে...</td></tr>`;
+
+      const q = query(collection(db, "withdrawals"), where("status", "==", "pending"));
+      const snap = await getDocs(q);
+      document.getElementById('withdraw-count-tag').innerText = `${snap.size} Requests`;
+
+      if (snap.empty) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-500 font-sans">কোনো পেন্ডিং উইথড্র নেই</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      snap.forEach(d => {
+        const w = d.data();
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-white/5 transition";
+        tr.innerHTML = `
+          <td class="p-3 text-gray-400 font-mono text-[10px]">${w.royalId || w.userId}</td>
+          <td class="p-3 font-bold text-white text-[11px]">${w.accountNumber}</td>
+          <td class="p-3 uppercase font-bold text-gold-400">${w.method}</td>
+          <td class="p-3 text-white font-bold">${Number(w.amount).toFixed(2)} RC</td>
+          <td class="p-3 text-red-400">${Number(w.fee).toFixed(2)} ৳</td>
+          <td class="p-3 text-emerald-400 font-black">৳${Number(w.netPayable).toFixed(2)}</td>
+          <td class="p-3 text-gray-400 text-[10px]">সম্প্রতি</td>
+          <td class="p-3 text-right">
+            <button onclick="handleWithdrawalActionBackend('${d.id}', 'paid')" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow">পেইড</button>
+            <button onclick="handleWithdrawalActionBackend('${d.id}', 'refund')" class="px-2.5 py-1 rounded-lg bg-red-600/30 text-red-300 font-bold text-xs ml-1">রিফান্ড</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.handleWithdrawalActionBackend = async function(withdrawalId, action) {
+      if (!confirm(`উইথড্রয়ালটি ${action} মার্ক করতে চান?`)) return;
+      const res = await adminFetch('/api/admin/withdrawals/action', {
+        method: 'POST',
+        body: JSON.stringify({ withdrawalId, action })
+      });
+      if (res.success) {
+        showToast(`উইথড্রয়াল ${action} সম্পন্ন হয়েছে!`);
+        await loadPendingWithdrawals();
+      }
+    };
+
+    window.viewImageDirect = function(img) {
+      document.getElementById('image-modal-img').src = img;
+      document.getElementById('image-viewer-modal').classList.remove('hidden');
+    };
+    window.closeImageViewer = function() {
+      document.getElementById('image-viewer-modal').classList.add('hidden');
+    };
+
+    // টোস্ট
+    let toastTimer = null;
+    window.showToast = function(msg, icon = 'fa-circle-check') {
+      const toast = document.getElementById('admin-toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+      if (!toast) return;
+
+      toastMsg.innerText = msg;
+      toastIcon.className = `fa-solid ${icon} text-gold-400 text-sm`;
+      clearTimeout(toastTimer);
+      toast.classList.remove('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+        toast.classList.add('opacity-0', 'translate-y-[-20px]', 'pointer-events-none');
+      }, 2500);
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('royal_admin_authed') === 'true') {
+        document.getElementById('admin-auth-screen').classList.add('hidden');
+        document.getElementById('admin-main-interface').classList.remove('hidden');
+        switchTab('dashboard');
+      }
+    });
+  </script>
+</body>
+</html>

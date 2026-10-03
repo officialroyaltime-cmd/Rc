@@ -1,0 +1,797 @@
+<!DOCTYPE html>  
+<html lang="bn">  
+<head>  
+  <meta charset="UTF-8">  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">  
+  <title>Royal Time - Withdraw</title>  
+   
+  <!-- Telegram WebApp Script -->  
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>  
+  <!-- Tailwind CSS CDN -->  
+  <script src="https://cdn.tailwindcss.com"></script>  
+  <!-- FontAwesome Icons CDN -->  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">  
+  <!-- Google Premium Fonts -->  
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">  
+  <!-- Confetti Script -->  
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>  
+  
+  <!-- Monetag / Ad SDK (Zone 10487556) -->  
+  <script src="//libtl.com/sdk.js" data-zone="10487556" data-sdk="show_10487556"></script>  
+  
+  <script>  
+    tailwind.config = {  
+      theme: {  
+        extend: {  
+          fontFamily: {  
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],  
+            royal: ['Cinzel', 'serif'],  
+            mono: ['"JetBrains Mono"', 'monospace']  
+          },  
+          colors: {  
+            gold: {  
+              100: '#FFFDEB',  
+              200: '#FDEFB4',  
+              300: '#F9DD78',  
+              400: '#F3C544',  
+              500: '#D4AF37', // 24K Royal Gold  
+              600: '#AA820A',  
+              700: '#7F6000',  
+            },  
+            royalDark: '#08080B',  
+            royalCard: '#121319',  
+          }  
+        }  
+      }  
+    }  
+  </script>  
+  
+  <style>  
+    .gold-metallic-bg {  
+      background: linear-gradient(135deg, #FDECA6 0%, #D4AF37 38%, #936C0A 75%, #F7E493 100%);  
+    }  
+    .royal-glow {  
+      box-shadow: 0 4px 25px rgba(212, 175, 55, 0.22);  
+    }  
+    @keyframes royalShimmer {  
+      0% { transform: translateX(-150%) skewX(-25deg); }  
+      40% { transform: translateX(150%) skewX(-25deg); }  
+      100% { transform: translateX(150%) skewX(-25deg); }  
+    }  
+    .shimmer-active {  
+      position: relative;  
+      overflow: hidden;  
+    }  
+    .shimmer-active::after {  
+      content: '';  
+      position: absolute;  
+      top: -50%;  
+      left: -50%;  
+      width: 200%;  
+      height: 200%;  
+      background: linear-gradient(60deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);  
+      animation: royalShimmer 4s infinite;  
+      pointer-events: none;  
+    }  
+    @keyframes coinFloat {  
+      0%, 100% { transform: translateY(0px) rotate(5deg) scale(1); }  
+      50% { transform: translateY(-6px) rotate(1deg) scale(1.03); }  
+    }  
+    .floating-coin {  
+      animation: coinFloat 3.8s ease-in-out infinite;  
+    }  
+    html, body { overflow-x: hidden; max-width: 100%; user-select: none; }  
+    ::-webkit-scrollbar { display: none; }  
+    * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }  
+  </style>  
+</head>  
+  
+<body class="bg-[#030305] text-gray-200 font-sans flex justify-center min-h-screen">  
+  
+  <!-- গ্লোবাল ডাইনামিক আইল্যান্ড টোস্ট -->  
+  <div id="royal-toast" class="fixed top-3 left-1/2 -translate-x-1/2 z-[250] transition-all duration-300 ease-out pointer-events-none opacity-0 -translate-y-8">  
+    <div class="px-4 py-2 rounded-full bg-[#121319]/95 border border-gold-500/40 backdrop-blur-xl shadow-2xl flex items-center gap-2 text-xs text-gold-200 font-sans whitespace-nowrap">  
+      <span class="w-2 h-2 rounded-full bg-gold-400 animate-ping"></span>  
+      <i id="toast-icon" class="fa-solid fa-circle-check text-gold-400 text-xs"></i>  
+      <span id="toast-msg" class="font-semibold tracking-wide">Action Successful</span>  
+    </div>  
+  </div>  
+  
+  <!-- মোবাইল ফ্রেম কনটেইনার -->  
+  <div class="w-full max-w-[430px] bg-royalDark min-h-screen pb-32 relative shadow-2xl flex flex-col border-x border-gold-500/10 overflow-x-hidden">  
+  
+    <!-- ১. স্লিম ও মার্জিত হেডার -->  
+    <div class="px-4 pt-4 pb-2.5 flex items-center justify-between border-b border-white/5 bg-royalCard/40">  
+      <a href="index.html" class="w-9 h-9 rounded-2xl bg-royalCard border border-gold-500/25 flex items-center justify-center text-gold-400 hover:border-gold-400 active:scale-95 transition shadow-sm">  
+        <i class="fa-solid fa-arrow-left text-xs"></i>  
+      </a>  
+      <div class="text-center">  
+        <span class="font-royal text-xs font-black tracking-widest text-gold-400 uppercase flex items-center justify-center gap-1.5">  
+          <i class="fa-regular fa-credit-card text-xs"></i> Withdraw Portal  
+        </span>  
+        <span class="text-[9px] text-gray-400 font-mono tracking-wider block" id="user-royal-id-tag">Royal ID: #RC-000000</span>  
+      </div>  
+      <div class="flex items-center gap-1.5">  
+        <button onclick="openDisputeModal()" class="w-9 h-9 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 hover:text-white active:scale-95 transition shadow-sm" title="পেমেন্ট রিপোর্ট">  
+          <i class="fa-solid fa-triangle-exclamation text-xs"></i>  
+        </button>  
+        <button onclick="openGuideModal()" class="w-9 h-9 rounded-2xl bg-royalCard border border-gold-500/25 flex items-center justify-center text-gold-400 hover:border-gold-400 active:scale-95 transition shadow-sm" title="নির্দেশিকা">  
+          <i class="fa-regular fa-circle-question text-xs"></i>  
+        </button>  
+      </div>  
+    </div>  
+  
+    <!-- মেইন কন্টেন্ট এরিয়া -->  
+    <main class="flex-1 px-4 pt-2 space-y-3.5">  
+  
+      <div id="inactive-account-banner" class="hidden bg-gradient-to-r from-red-950/50 via-royalCard to-red-950/40 border border-red-500/50 rounded-2xl p-3 shadow-md space-y-2">  
+        <div class="flex items-center justify-between text-xs">  
+          <span class="font-bold text-red-400 flex items-center gap-1.5">  
+            <i class="fa-solid fa-lock animate-pulse"></i> অ্যাকাউন্ট সক্রিয় নয় (Withdraw Locked)  
+          </span>  
+          <a href="activate.html" class="text-[10px] font-black bg-red-500 text-white px-2.5 py-0.5 rounded-full uppercase shadow">সক্রিয় করুন</a>  
+        </div>  
+        <p class="text-[10.5px] text-gray-300 leading-snug">  
+          ক্যাশআউট করতে আপনার অ্যাকাউন্ট সক্রিয় থাকতে হবে।  
+        </p>  
+      </div>  
+
+      <div id="loan-due-banner" class="hidden bg-gradient-to-r from-amber-950/50 via-royalCard to-amber-950/40 border border-amber-500/50 rounded-2xl p-3 shadow-md space-y-2">  
+        <div class="flex items-center justify-between text-xs">  
+          <span class="font-bold text-amber-400 flex items-center gap-1.5">  
+            <i class="fa-solid fa-hand-holding-dollar animate-bounce"></i> লোন পরিশোধ বাকি রয়েছে  
+          </span>  
+          <span class="text-[10px] font-mono font-bold text-white bg-amber-500/20 px-2 py-0.5 rounded-full" id="banner-loan-val">৩৫.০০৳ বাকি</span>  
+        </div>  
+        <p class="text-[10.5px] text-gray-300 leading-snug">  
+          লোনের টাকা সম্পূর্ণ পরিশোধ না হওয়া পর্যন্ত কোনো ক্যাশআউট অনুমোদনযোগ্য হবে না।  
+        </p>  
+      </div>  
+  
+      <div id="in-review-banner" class="hidden bg-gradient-to-r from-amber-950/40 via-royalCard to-amber-950/30 border border-amber-500/40 rounded-2xl p-3 shadow-md space-y-1">  
+        <div class="flex items-center justify-between text-xs">  
+          <span class="font-bold text-amber-400 flex items-center gap-1.5">  
+            <i class="fa-solid fa-user-clock animate-pulse"></i> অ্যাকাউন্ট পর্যালোচনাধীন (Under Review)  
+          </span>  
+          <span class="text-[9px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">লকড 🔒</span>  
+        </div>  
+        <p class="text-[10px] text-gray-300 leading-snug">  
+          নিরাপত্তা পর্যালোচনা শেষ না হওয়া পর্যন্ত ক্যাশআউট সাময়িকভাবে স্থগিত থাকবে।  
+        </p>  
+      </div>  
+  
+      <!-- ২. ব্যালেন্স কার্ড -->  
+      <div class="gold-metallic-bg rounded-3xl p-4 text-gray-950 shadow-xl royal-glow shimmer-active relative overflow-hidden flex items-center justify-between">  
+        <i class="fa-solid fa-crown absolute -right-5 -bottom-5 text-8xl opacity-15 pointer-events-none text-black"></i>  
+        <div class="flex-1 min-w-0 relative z-10 space-y-0.5">  
+          <div class="flex items-center gap-1.5 text-amber-950 font-black text-[10px] tracking-wider uppercase">  
+            <span>Available Balance</span>  
+            <button onclick="toggleBalance()" class="text-amber-900 hover:text-black p-0.5">  
+              <i id="eye-icon" class="fa-solid fa-eye text-xs"></i>  
+            </button>  
+          </div>  
+          <div class="flex items-baseline gap-1 py-0.5">  
+            <span class="text-2xl font-black tracking-tight text-black font-sans truncate" id="balance-amount">0.00</span>  
+            <span class="text-xs font-black uppercase text-amber-950 tracking-wider">RC</span>  
+          </div>  
+          <div class="text-[10px] text-amber-950/85 font-medium truncate">  
+            উত্তোলনযোগ্য: <span class="font-bold text-black" id="available-amount">0.00</span> RC  
+          </div>  
+        </div>  
+        <div class="w-16 h-16 flex items-center justify-center flex-shrink-0">  
+          <img   
+            src="https://i.ibb.co.com/G329sgvj/file-000000009c8881fba832487fa100ac4e.png"   
+            alt="RC"   
+            class="w-14 h-14 object-contain floating-coin drop-shadow-md"  
+          />  
+        </div>  
+      </div>  
+  
+      <!-- ৩. পেমেন্ট মেথড সেকশন -->  
+      <div class="space-y-1.5">  
+        <div class="flex items-center justify-between px-1">  
+          <span class="text-[11px] font-bold text-gray-300 uppercase tracking-wider flex items-center gap-1.5">  
+            <i class="fa-solid fa-building-columns text-gold-400 text-xs"></i> পেমেন্ট মেথড  
+          </span>  
+          <span class="text-[9px] text-gold-400 font-semibold bg-gold-500/10 px-2 py-0.5 rounded-full border border-gold-500/20">  
+            ফি: ২০৳ / প্রতি ৬০০ RC  
+          </span>  
+        </div>  
+        <div id="payment-methods-grid" class="grid grid-cols-2 gap-2.5"></div>  
+      </div>  
+  
+      <!-- ৪. রেফারেল রিকোয়ারমেন্ট বার -->  
+      <div class="bg-royalCard border border-gold-500/20 rounded-2xl p-2.5 flex items-center justify-between shadow-sm">  
+        <div class="flex items-center gap-2">  
+          <div class="w-7 h-7 rounded-lg bg-gold-500/10 border border-gold-500/20 flex items-center justify-center text-gold-400 text-xs">  
+            <i class="fa-solid fa-users"></i>  
+          </div>  
+          <div>  
+            <span class="text-[11px] font-bold text-white block" id="ref-condition-text">রেফারেল শর্ত: লোড হচ্ছে...</span>  
+            <span class="text-[9px] text-gray-400" id="ref-sub-text">আপনার রেফার: <strong class="text-white font-mono" id="referral-count">0</strong> জন</span>  
+          </div>  
+        </div>  
+        <span class="text-[10px] font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-mono" id="referral-needed-badge">  
+          লোড হচ্ছে...  
+        </span>  
+      </div>  
+  
+      <!-- ৫. ইনপুট ফর্ম -->  
+      <div class="space-y-2.5">  
+        <div class="space-y-1">  
+          <label class="text-[11px] font-bold text-gray-300 uppercase tracking-wider px-1">ক্যাশআউট রিসিভার নম্বর</label>  
+          <div class="relative">  
+            <input   
+              type="tel"   
+              id="account-number"   
+              placeholder="01XXXXXXXXX"   
+              maxlength="11"  
+              class="w-full h-12 bg-black/50 border border-gold-500/25 rounded-2xl px-4 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gold-400 font-mono shadow-inner"  
+            />  
+            <i class="fa-solid fa-phone absolute right-4 top-1/2 -translate-y-1/2 text-gold-400/60 text-xs"></i>  
+          </div>  
+        </div>  
+  
+        <div class="space-y-1">  
+          <div class="flex items-center justify-between px-1">  
+            <label class="text-[11px] font-bold text-gray-300 uppercase tracking-wider">উইথড্র অ্যামাউন্ট (RC)</label>  
+            <span class="text-[10px] text-gold-400 font-semibold" id="min-limit-label">মিনিমাম ৬০০ RC</span>  
+          </div>  
+          <div class="relative flex items-center">  
+            <span class="absolute left-4 text-gold-400 font-black text-xs font-royal">RC</span>  
+            <input   
+              type="number"   
+              id="withdraw-amount"   
+              placeholder="600"   
+              min="600"  
+              step="100"  
+              oninput="calculateFeeLive()"  
+              class="w-full h-12 bg-black/50 border border-gold-500/25 rounded-2xl pl-12 pr-16 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gold-400 font-mono shadow-inner"  
+            />  
+            <button   
+              onclick="setAllAmount()"   
+              class="absolute right-2 px-3 py-1.5 bg-gold-500/20 hover:bg-gold-500/30 text-gold-300 font-bold text-[11px] rounded-xl active:scale-95 transition border border-gold-500/30"  
+            >  
+              All  
+            </button>  
+          </div>  
+        </div>  
+  
+        <!-- প্রিসেট চিপস -->  
+        <div class="grid grid-cols-5 gap-1.5 pt-0.5">  
+          <button onclick="setAmount(600)" class="py-2 bg-royalCard hover:bg-gold-500/10 border border-gold-500/20 hover:border-gold-400 rounded-xl text-xs font-bold text-gray-300 active:scale-95 transition">600</button>  
+          <button onclick="setAmount(1200)" class="py-2 bg-royalCard hover:bg-gold-500/10 border border-gold-500/20 hover:border-gold-400 rounded-xl text-xs font-bold text-gray-300 active:scale-95 transition">1200</button>  
+          <button onclick="setAmount(1800)" class="py-2 bg-royalCard hover:bg-gold-500/10 border border-gold-500/20 hover:border-gold-400 rounded-xl text-xs font-bold text-gray-300 active:scale-95 transition">1800</button>  
+          <button onclick="setAmount(2400)" class="py-2 bg-royalCard hover:bg-gold-500/10 border border-gold-500/20 hover:border-gold-400 rounded-xl text-xs font-bold text-gray-300 active:scale-95 transition">2400</button>  
+          <button onclick="setAmount(3000)" class="py-2 bg-royalCard hover:bg-gold-500/10 border border-gold-500/20 hover:border-gold-400 rounded-xl text-xs font-bold text-gray-300 active:scale-95 transition">3000</button>  
+        </div>  
+  
+        <!-- লাইভ ফি ব্রেকডাউন -->  
+        <div class="bg-black/50 border border-gold-500/20 rounded-2xl p-3 space-y-1.5 text-xs shadow-sm">  
+          <div class="flex items-center justify-between text-gray-400 text-[11px]">  
+            <span>সার্ভিস ফি (প্রতি ৬০০ তে ২০৳):</span>  
+            <span class="text-red-400 font-bold font-mono" id="calc-fee">- 0.00 ৳</span>  
+          </div>  
+          <div class="border-t border-white/10 pt-2 flex items-center justify-between">  
+            <span class="text-gold-300 font-bold text-xs">আপনি নগদ পাবেন:</span>  
+            <span class="text-base font-black text-gold-400 font-mono" id="calc-net">0.00 ৳</span>  
+          </div>  
+        </div>  
+      </div>  
+  
+      <!-- ৬. অ্যাড-গেট প্রগ্রেস বার -->  
+      <div id="ad-gate-section" class="bg-gradient-to-r from-royalCard via-[#1e170c] to-royalCard border border-gold-500/30 rounded-2xl p-3.5 shadow-md space-y-2.5">  
+        <div class="flex items-center justify-between">  
+          <div class="flex items-center gap-2">  
+            <div class="w-8 h-8 rounded-xl bg-gold-500/15 border border-gold-500/30 flex items-center justify-center text-gold-400 text-sm">  
+              <i class="fa-solid fa-shield-halved animate-pulse"></i>  
+            </div>  
+            <div>  
+              <h4 class="text-xs font-bold text-white leading-tight">উইথড্রয়াল অ্যাড ভেরিফিকেশন</h4>  
+              <p class="text-[9px] text-gray-400">১৫ সেকেন্ড অ্যাড দেখে উইথড্র বাটন আনলক করুন</p>  
+            </div>  
+          </div>  
+          <button   
+            id="btn-watch-ad-gate"   
+            onclick="watchAdGate()"   
+            class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:brightness-110 text-white font-extrabold text-[11px] flex items-center gap-1.5 shadow-md active:scale-95 transition flex-shrink-0"  
+          >  
+            <i class="fa-solid fa-play text-[9px]"></i>  
+            <span id="ad-btn-label">অ্যাড দেখুন 🎬</span>  
+          </button>  
+        </div>  
+  
+        <div class="space-y-1">  
+          <div class="flex items-center justify-between text-[10px]">  
+            <span class="text-gray-300">অগ্রগতি: <strong class="text-gold-400 font-mono" id="ad-gate-count-text">০ / ৩ সম্পন্ন</strong></span>  
+            <span class="text-[9px] font-bold text-amber-400" id="ad-gate-status-badge">লকড 🔒</span>  
+          </div>  
+          <div class="w-full bg-black/60 rounded-full h-2 overflow-hidden border border-white/5">  
+            <div id="ad-gate-progress-bar" class="bg-gradient-to-r from-gold-600 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>  
+          </div>  
+        </div>  
+      </div>  
+  
+      <!-- ৭. মূল উইথড্রয়াল অ্যাকশন বাটন -->  
+      <div class="space-y-2 pt-1">  
+        <button   
+          id="withdraw-submit-btn"  
+          onclick="handleWithdrawAction()"   
+          disabled  
+          class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-gray-700 to-gray-600 opacity-60 cursor-not-allowed text-gray-300 font-black text-xs sm:text-sm tracking-wider uppercase shadow-xl flex items-center justify-center gap-2 transition-all duration-300"  
+        >  
+          <span id="btn-text">শর্ত পূরণ করুন</span>  
+          <i class="fa-solid fa-lock text-xs" id="btn-lock-icon"></i>  
+        </button>  
+  
+        <a   
+          id="refer-link-redirect"  
+          href="refer.html"   
+          class="w-full py-3 rounded-2xl bg-royalCard border border-gold-500/25 hover:border-gold-400 text-gold-300 font-bold text-xs flex items-center justify-center gap-2 shadow-sm active:scale-95 transition"  
+        >  
+          <i class="fa-solid fa-user-plus text-gold-400 text-xs"></i>  
+          <span>রেফার করুন ও টিম বড় করুন</span>  
+        </a>  
+      </div>  
+  
+      <!-- ৮. হিস্ট্রি -->  
+      <div class="pt-2">  
+        <div class="flex items-center justify-between mb-2 px-1">  
+          <div class="flex items-center gap-2">  
+            <i class="fa-regular fa-clock text-gold-400 text-xs"></i>  
+            <h3 class="font-bold text-xs uppercase tracking-wider text-gray-300">Withdrawal History</h3>  
+          </div>  
+        </div>  
+        <div id="withdrawal-history-list" class="space-y-2">  
+          <div id="empty-history" class="bg-royalCard border border-white/5 rounded-2xl p-5 text-center space-y-1">  
+            <i class="fa-solid fa-receipt text-2xl text-gray-600 mb-1"></i>  
+            <h4 class="text-xs font-bold text-gray-400">এখনও কোনো উইথড্র করেননি</h4>  
+          </div>  
+        </div>  
+      </div>  
+  
+    </main>  
+  
+    <!-- ৯. বটম বার -->  
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-royalCard/95 backdrop-blur-lg border-t border-gold-500/20 py-2.5 px-3 z-50 rounded-t-2xl shadow-2xl">  
+      <div class="grid grid-cols-5 text-center">  
+        <a href="index.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">  
+          <i class="fa-solid fa-house text-lg"></i>  
+          <span class="text-[10px] font-medium mt-1">Home</span>  
+        </a>  
+        <a href="earn.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">  
+          <i class="fa-regular fa-envelope-open text-lg"></i>  
+          <span class="text-[10px] font-medium mt-1">Earn</span>  
+        </a>  
+        <a href="refer.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">  
+          <i class="fa-solid fa-user-group text-lg"></i>  
+          <span class="text-[10px] font-medium mt-1">Refer</span>  
+        </a>  
+        <button class="flex flex-col items-center justify-center text-gold-400 relative">  
+          <div class="w-9 h-7 rounded-xl bg-gold-500/20 border border-gold-500/40 flex items-center justify-center shadow-inner">  
+            <i class="fa-regular fa-credit-card text-sm"></i>  
+          </div>  
+          <span class="text-[10px] font-bold mt-1 text-gold-400">Withdraw</span>  
+        </button>  
+        <a href="profile.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">  
+          <i class="fa-regular fa-user text-lg"></i>  
+          <span class="text-[10px] font-medium mt-1">Profile</span>  
+        </a>  
+      </div>  
+    </nav>  
+  
+  </div>  
+  
+  <!-- মডালসমূহ -->  
+  <div id="guide-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[280] hidden flex items-center justify-center p-4">  
+    <div class="bg-royalCard border border-gold-500/30 w-full max-w-[360px] rounded-3xl p-5 space-y-3.5 shadow-2xl">  
+      <div class="flex items-center justify-between border-b border-white/10 pb-2.5">  
+        <h3 class="font-royal font-bold text-xs text-gold-300 flex items-center gap-1.5">  
+          <i class="fa-solid fa-circle-question text-gold-400"></i> উইথড্র নির্দেশিকা  
+        </h3>  
+        <button onclick="closeGuideModal()" class="text-gray-400 hover:text-white p-1">  
+          <i class="fa-solid fa-xmark text-sm"></i>  
+        </button>  
+      </div>  
+      <div class="space-y-2 text-[11px] text-gray-300 leading-relaxed">  
+        <p>• <strong>অ্যাকাউন্ট ভেরিফিকেশন:</strong> একাউন্ট সক্রিয় না থাকলে ক্যাশআউট করা যাবে না।</p>  
+        <p>• <strong>লোন শর্ত:</strong> বকেয়া লোন থাকলে আগে তা সম্পূর্ণ পরিশোধ করতে হবে।</p>  
+        <p>• <strong>পেমেন্ট সময়:</strong> ১২ থেকে ২৪ ঘণ্টার মধ্যে বিকাশ বা নগদে পাঠানো হবে।</p>  
+      </div>  
+      <button onclick="closeGuideModal()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-gold-600 to-gold-400 text-black font-bold text-xs active:scale-95 transition">  
+        বুঝেছি  
+      </button>  
+    </div>  
+  </div>  
+
+  <div id="dispute-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[280] hidden flex items-center justify-center p-4">  
+    <div class="bg-royalCard border border-rose-500/40 w-full max-w-[370px] rounded-3xl p-5 space-y-3.5 shadow-2xl relative">  
+      <div class="flex items-center justify-between border-b border-white/10 pb-2.5">  
+        <h4 class="font-bold text-xs text-white">পেমেন্ট হেল্পডেস্ক ও রিপোর্ট</h4>  
+        <button onclick="closeDisputeModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xs"></i></button>  
+      </div>  
+      <div class="space-y-2.5 text-xs">  
+        <textarea id="dispute-message" rows="3" placeholder="সমস্যাটির বিবরণ লিখুন..." class="w-full bg-black/60 border border-white/10 rounded-xl p-3 text-white text-xs"></textarea>  
+      </div>  
+      <button onclick="submitPaymentDispute()" class="w-full py-3 rounded-xl bg-rose-600 text-white font-bold text-xs">রিপোর্ট পাঠান</button>  
+    </div>  
+  </div>  
+  
+  <script type="module">  
+    import {   
+      initSuperEngine,   
+      triggerHaptic,   
+      submitUserReport,  
+      getImmediateCachedProfile,  
+      apiFetch,  
+      tg,   
+      db   
+    } from './royal-core.js';  
+  
+    import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";  
+  
+    let activeUser = null;  
+    let activeUserId = null;  
+    let isSubmitting = false;  
+  
+    let currentBalance = 0.00;  
+    let userReferrals = 0;  
+    let requiredReferrals = 0;  
+    let minWithdrawRC = 600;  
+    let requiredAdsCount = 3;  
+    let watchedAdsCount = 0;  
+  
+    let isAdWatching = false;  
+    let adWatchTimer = null;  
+    let adSecondsLeft = 15;  
+  
+    let paymentMethods = [  
+      { id: 'bkash', name: 'bKash', minRC: 600, logo: 'https://freelogopng.com/images/all_img/1656234841bkash-icon-png.png', fallbackText: 'BK' },  
+      { id: 'nagad', name: 'Nagad', minRC: 600, logo: 'https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png', fallbackText: 'NG' }  
+    ];  
+    let selectedMethod = 'bkash';  
+  
+    function loadCachedStateImmediately() {  
+      try {  
+        const cached = getImmediateCachedProfile();  
+        if (cached.royalId) {  
+          const rTag = document.getElementById('user-royal-id-tag');  
+          if (rTag) rTag.innerText = `Royal ID: #${cached.royalId}`;  
+        }  
+        if (cached.balance !== undefined && !isNaN(cached.balance)) {  
+          currentBalance = cached.balance;  
+          document.getElementById('balance-amount').innerText = currentBalance.toFixed(2);  
+          document.getElementById('available-amount').innerText = currentBalance.toFixed(2);  
+        }  
+        if (cached.referrals !== undefined && !isNaN(cached.referrals)) {  
+          userReferrals = Number(cached.referrals);  
+          document.getElementById('referral-count').innerText = userReferrals;  
+        }  
+        renderPaymentMethods();  
+      } catch (e) {}  
+    }  
+    loadCachedStateImmediately();  
+  
+    async function initWithdrawPage() {  
+      try {  
+        const { userId, userData } = await initSuperEngine(true);  
+        activeUser = userData;  
+        activeUserId = userId;  
+        currentBalance = Number(userData.balance || 0);  
+        userReferrals = Number(userData.user_referrals ?? userData.referrals_count ?? 0);  
+
+        const finalRoyalId = userData.royal_id || userId.replace('tg_', 'RC-');  
+        const rTag = document.getElementById('user-royal-id-tag');  
+        if (rTag) rTag.innerText = `Royal ID: #${finalRoyalId}`;  
+
+        await loadAdminWithdrawConfig();  
+        checkAccountSecurityState();  
+        renderPaymentMethods();  
+        await loadWithdrawalHistory();  
+        updateWithdrawUI();  
+      } catch (err) {}  
+    }  
+
+    function checkAccountSecurityState() {  
+      if (!activeUser) return;  
+      const st = activeUser.account_status || 'inactive';  
+      const loanRemaining = Number(activeUser.loan_remaining || 0);  
+      const inactiveBanner = document.getElementById('inactive-account-banner');  
+      const loanBanner = document.getElementById('loan-due-banner');  
+      const reviewBanner = document.getElementById('in-review-banner');  
+
+      if (st === 'in_review') {  
+        reviewBanner.classList.remove('hidden');  
+        inactiveBanner.classList.add('hidden');  
+        loanBanner.classList.add('hidden');  
+      } else if (st === 'inactive') {  
+        inactiveBanner.classList.remove('hidden');  
+        reviewBanner.classList.add('hidden');  
+        loanBanner.classList.add('hidden');  
+      } else if (st === 'loan' && loanRemaining > 0) {  
+        loanBanner.classList.remove('hidden');  
+        document.getElementById('banner-loan-val').innerText = `${loanRemaining.toFixed(2)}৳ বাকি`;  
+        inactiveBanner.classList.add('hidden');  
+        reviewBanner.classList.add('hidden');  
+      } else {  
+        inactiveBanner.classList.add('hidden');  
+        loanBanner.classList.add('hidden');  
+        reviewBanner.classList.add('hidden');  
+      }  
+    }  
+  
+    async function loadAdminWithdrawConfig() {  
+      try {  
+        const res = await apiFetch('/api/config');  
+        if (res.success && res.config) {  
+          const cfg = res.config;  
+          if (cfg.withdrawRequiredReferrals !== undefined) requiredReferrals = Number(cfg.withdrawRequiredReferrals);  
+          if (cfg.minWithdraw !== undefined) minWithdrawRC = Number(cfg.minWithdraw);  
+          if (cfg.requiredWithdrawAds !== undefined) requiredAdsCount = Number(cfg.requiredWithdrawAds);  
+        }  
+      } catch (e) {}  
+    }  
+  
+    function renderPaymentMethods() {  
+      const container = document.getElementById('payment-methods-grid');  
+      if (!container) return;  
+      container.innerHTML = '';  
+      paymentMethods.forEach((method) => {  
+        const isSelected = method.id === selectedMethod;  
+        const card = document.createElement('div');  
+        card.onclick = () => { triggerHaptic('light'); selectedMethod = method.id; renderPaymentMethods(); };  
+        card.className = isSelected   
+          ? "cursor-pointer bg-royalCard border-2 border-gold-400 rounded-2xl p-2.5 flex items-center justify-between transition"  
+          : "cursor-pointer bg-royalCard border border-white/10 rounded-2xl p-2.5 flex items-center justify-between transition";  
+        card.innerHTML = `  
+          <div class="flex items-center gap-2.5 min-w-0">  
+            <img src="${method.logo}" class="w-8 h-8 object-contain" />  
+            <div>  
+              <h4 class="font-bold text-xs text-white">${method.name}</h4>  
+              <span class="text-[9px] text-gray-400 font-mono">Min. ${minWithdrawRC} RC</span>  
+            </div>  
+          </div>  
+          <i class="fa-solid fa-circle-check text-gold-400 text-sm ${isSelected ? '' : 'hidden'}"></i>  
+        `;  
+        container.appendChild(card);  
+      });  
+    }  
+  
+    window.watchAdGate = function() {  
+      triggerHaptic('medium');  
+      if (requiredAdsCount === 0 || watchedAdsCount >= requiredAdsCount) {  
+        showToast('উইথড্রয়াল ভেরিফিকেশন সম্পন্ন!', 'fa-circle-check');  
+        return;  
+      }  
+      if (isAdWatching) return;  
+      const adBtn = document.getElementById('btn-watch-ad-gate');  
+      adBtn.disabled = true;  
+      isAdWatching = true;  
+      adSecondsLeft = 15;  
+
+      if (typeof window.show_10487556 === 'function') window.show_10487556().catch(() => {});  
+
+      adWatchTimer = setInterval(() => {  
+        adSecondsLeft--;  
+        const label = document.getElementById('ad-btn-label');  
+        if (label) label.innerText = `অপেক্ষা করুন (${adSecondsLeft}s)`;  
+        if (adSecondsLeft <= 0) {  
+          clearInterval(adWatchTimer);  
+          isAdWatching = false;  
+          watchedAdsCount++;  
+          showToast(`ভেরিফিকেশন সম্পন্ন! (${watchedAdsCount}/${requiredAdsCount})`, 'fa-circle-check');  
+          updateAdGateUI();  
+        }  
+      }, 1000);  
+    };  
+  
+    function updateAdGateUI() {  
+      const adBtn = document.getElementById('btn-watch-ad-gate');  
+      const countText = document.getElementById('ad-gate-count-text');  
+      const statusBadge = document.getElementById('ad-gate-status-badge');  
+      const bar = document.getElementById('ad-gate-progress-bar');  
+      const withdrawBtn = document.getElementById('withdraw-submit-btn');  
+      const btnText = document.getElementById('btn-text');  
+
+      const percent = requiredAdsCount === 0 ? 100 : Math.min(100, Math.round((watchedAdsCount / requiredAdsCount) * 100));  
+      if (bar) bar.style.width = `${percent}%`;  
+      if (countText) countText.innerText = requiredAdsCount === 0 ? `প্রয়োজন নেই` : `${watchedAdsCount} / ${requiredAdsCount} সম্পন্ন`;  
+
+      const st = activeUser?.account_status || 'inactive';  
+      const loanDue = Number(activeUser?.loan_remaining || 0);  
+
+      if (st === 'inactive') {  
+        if (withdrawBtn) withdrawBtn.disabled = true;  
+        if (btnText) btnText.innerText = "অ্যাকাউন্ট সক্রিয় করুন (উত্তোলন বন্ধ)";  
+        return;  
+      }  
+      if (st === 'loan' && loanDue > 0) {  
+        if (withdrawBtn) withdrawBtn.disabled = true;  
+        if (btnText) btnText.innerText = `লোন পরিশোধ করুন (বাকি: ${loanDue.toFixed(2)}৳)`;  
+        return;  
+      }  
+      if (st === 'in_review') {  
+        if (withdrawBtn) withdrawBtn.disabled = true;  
+        if (btnText) btnText.innerText = "অ্যাকাউন্ট পর্যালোচনাধীন";  
+        return;  
+      }  
+
+      const adsFulfilled = requiredAdsCount === 0 || watchedAdsCount >= requiredAdsCount;  
+      const refsFulfilled = requiredReferrals === 0 || userReferrals >= requiredReferrals;  
+
+      if (adsFulfilled) {  
+        if (statusBadge) { statusBadge.innerText = "আনলকড ✓"; statusBadge.className = "text-[9px] font-bold text-emerald-400"; }  
+        if (adBtn) { adBtn.disabled = true; adBtn.innerText = "সম্পন্ন ✓"; }  
+
+        if (refsFulfilled) {  
+          if (withdrawBtn) {  
+            withdrawBtn.disabled = false;  
+            withdrawBtn.className = "w-full py-3.5 rounded-2xl bg-gradient-to-r from-gold-600 to-amber-500 text-black font-black text-xs uppercase shadow-xl active:scale-95 transition cursor-pointer";  
+          }  
+          if (btnText) btnText.innerText = "উইথড্র নিশ্চিত করুন";  
+        } else {  
+          if (withdrawBtn) withdrawBtn.disabled = true;  
+          if (btnText) btnText.innerText = `আরও ${requiredReferrals - userReferrals}টি রেফার প্রয়োজন`;  
+        }  
+      } else {  
+        if (withdrawBtn) withdrawBtn.disabled = true;  
+        if (btnText) btnText.innerText = `আগে ${requiredAdsCount - watchedAdsCount}টি অ্যাড দেখুন`;  
+      }  
+    }  
+  
+    window.setAmount = function(val) { document.getElementById('withdraw-amount').value = val; calculateFeeLive(); };  
+    window.setAllAmount = function() { document.getElementById('withdraw-amount').value = Math.floor(currentBalance); calculateFeeLive(); };  
+    window.calculateFeeLive = function() {  
+      const amount = parseFloat(document.getElementById('withdraw-amount').value) || 0;  
+      const fee = (amount / 600) * 20;  
+      document.getElementById('calc-fee').innerText = `- ${fee.toFixed(2)} ৳`;  
+      document.getElementById('calc-net').innerText = `${Math.max(0, amount - fee).toFixed(2)} ৳`;  
+    };  
+  
+    function updateWithdrawUI() {  
+      document.getElementById('balance-amount').innerText = currentBalance.toFixed(2);  
+      document.getElementById('available-amount').innerText = currentBalance.toFixed(2);  
+      document.getElementById('referral-count').innerText = userReferrals;  
+      document.getElementById('min-limit-label').innerText = `মিনিমাম ${minWithdrawRC} RC`;  
+      const badge = document.getElementById('referral-needed-badge');  
+
+      if (requiredReferrals === 0) {  
+        document.getElementById('ref-condition-text').innerText = "রেফারেল শর্ত: প্রয়োজন নেই";  
+        if (badge) { badge.innerText = "রেফার প্রয়োজন নেই ✓"; badge.className = "text-[10px] text-emerald-400 font-bold font-mono"; }  
+        document.getElementById('refer-link-redirect').classList.add('hidden');  
+      } else {  
+        document.getElementById('ref-condition-text').innerText = `রেফারেল শর্ত: ${requiredReferrals} জন`;  
+        if (badge) {  
+          badge.innerText = userReferrals >= requiredReferrals ? "পূরণ হয়েছে ✓" : `${requiredReferrals - userReferrals} জন বাকি`;  
+        }  
+      }  
+      updateAdGateUI();  
+    }  
+  
+    // Backend Server Authoritative Withdrawal Request
+    window.handleWithdrawAction = async function() {  
+      triggerHaptic('medium');  
+      if (isSubmitting) return;  
+
+      const num = document.getElementById('account-number').value.trim();  
+      const amount = parseFloat(document.getElementById('withdraw-amount').value) || 0;  
+
+      if (!num || num.length !== 11 || !num.startsWith('01')) {  
+        showToast('সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন!', 'fa-circle-xmark');  
+        return;  
+      }  
+      if (amount < minWithdrawRC) {  
+        showToast(`সর্বনিম্ন উইথড্র অ্যামাউন্ট ${minWithdrawRC} RC!`, 'fa-circle-exclamation');  
+        return;  
+      }  
+
+      const btn = document.getElementById('withdraw-submit-btn');  
+      btn.disabled = true;  
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>প্রসেসিং...</span>`;  
+      isSubmitting = true;  
+
+      try {  
+        const res = await apiFetch('/api/withdraw/request', {  
+          method: 'POST',  
+          body: JSON.stringify({  
+            method: selectedMethod,  
+            accountNumber: num,  
+            amount  
+          })  
+        });  
+
+        if (res.success) {  
+          currentBalance -= amount;  
+          watchedAdsCount = 0;  
+          updateWithdrawUI();  
+          confetti({ particleCount: 65, spread: 70, origin: { y: 0.8 }, colors: ['#D4AF37', '#FFFDEB'] });  
+          showToast('উইথড্র রিকোয়েস্ট সফলভাবে জমা হয়েছে! ⏳', 'fa-circle-check');  
+          document.getElementById('withdraw-amount').value = '';  
+          document.getElementById('account-number').value = '';  
+          calculateFeeLive();  
+          await loadWithdrawalHistory();  
+        } else {  
+          showToast(res.error || 'উইথড্র ব্যর্থ হয়েছে', 'fa-triangle-exclamation');  
+        }  
+      } catch (err) {  
+        showToast('সার্ভার সংযোগ সমস্যা', 'fa-triangle-exclamation');  
+      } finally {  
+        isSubmitting = false;  
+        updateAdGateUI();  
+      }  
+    };  
+  
+    window.openGuideModal = function() { document.getElementById('guide-modal').classList.remove('hidden'); };  
+    window.closeGuideModal = function() { document.getElementById('guide-modal').classList.add('hidden'); };  
+    window.openDisputeModal = function() { document.getElementById('dispute-modal').classList.remove('hidden'); };  
+    window.closeDisputeModal = function() { document.getElementById('dispute-modal').classList.add('hidden'); };  
+
+    window.submitPaymentDispute = async function() {  
+      const msg = document.getElementById('dispute-message').value.trim();  
+      if (!msg) { showToast('বিবরণ লিখুন'); return; }  
+      await submitUserReport(activeUserId, { reportType: "Payment Issue", message: msg });  
+      closeDisputeModal();  
+      showToast('রিপোর্ট অ্যাডমিনের কাছে পাঠানো হয়েছে');  
+    };  
+  
+    async function loadWithdrawalHistory() {  
+      try {  
+        const q = query(collection(db, "withdrawals"), where("userId", "==", activeUserId));  
+        const snap = await getDocs(q);  
+        const container = document.getElementById('withdrawal-history-list');  
+        if (!snap.empty) {  
+          container.innerHTML = '';  
+          snap.forEach(d => {  
+            const item = d.data();  
+            const div = document.createElement('div');  
+            div.className = "bg-royalCard border border-white/5 p-3 rounded-2xl flex items-center justify-between";  
+            div.innerHTML = `  
+              <div>  
+                <h5 class="text-xs font-bold text-white capitalize">${item.method} (${item.accountNumber})</h5>  
+                <p class="text-[10px] text-gray-400">ফি: ${item.fee}৳ • নেট: ${item.netPayable}৳</p>  
+              </div>  
+              <div class="text-right">  
+                <span class="text-xs font-bold text-gold-400 font-mono">-${item.amount} RC</span>  
+                <span class="block text-[9px] uppercase font-bold text-amber-400">${item.status}</span>  
+              </div>  
+            `;  
+            container.appendChild(div);  
+          });  
+        }  
+      } catch (e) {}  
+    }  
+
+    let isVisible = true;  
+    window.toggleBalance = function() {  
+      const b = document.getElementById('balance-amount');  
+      const a = document.getElementById('available-amount');  
+      const icon = document.getElementById('eye-icon');  
+      if (isVisible) {  
+        b.innerText = '••••••'; a.innerText = '••••••'; icon.classList.replace('fa-eye', 'fa-eye-slash');  
+      } else {  
+        b.innerText = currentBalance.toFixed(2); a.innerText = currentBalance.toFixed(2); icon.classList.replace('fa-eye-slash', 'fa-eye');  
+      }  
+      isVisible = !isVisible;  
+    };  
+
+    let toastTimer = null;  
+    window.showToast = function(msg, icon = 'fa-circle-check') {  
+      const toast = document.getElementById('royal-toast');  
+      const toastMsg = document.getElementById('toast-msg');  
+      const toastIcon = document.getElementById('toast-icon');  
+      if (!toast) return;  
+      toastMsg.innerText = msg;  
+      toastIcon.className = `fa-solid ${icon} text-gold-400 text-xs`;  
+      clearTimeout(toastTimer);  
+      toast.classList.remove('opacity-0', '-translate-y-8', 'pointer-events-none');  
+      toast.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');  
+      toastTimer = setTimeout(() => {  
+        toast.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');  
+        toast.classList.add('opacity-0', '-translate-y-8', 'pointer-events-none');  
+      }, 2400);  
+    };  
+
+    document.addEventListener('DOMContentLoaded', initWithdrawPage);  
+  </script>
+</body>
+</html>

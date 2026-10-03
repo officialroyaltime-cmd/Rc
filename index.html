@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Royal Time - Home</title>
+  
+  <!-- Telegram WebApp Script -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Confetti Script -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            royal: ['Cinzel', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            gold: {
+              100: '#FFFDEB',
+              200: '#FDEFB4',
+              300: '#F9DD78',
+              400: '#F3C544',
+              500: '#D4AF37', // 24K Royal Gold
+              600: '#AA820A',
+              700: '#7F6000',
+            },
+            royalDark: '#08080B',
+            royalCard: '#121319',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .gold-metallic-bg {
+      background: linear-gradient(135deg, #FDECA6 0%, #D4AF37 38%, #936C0A 75%, #F7E493 100%);
+    }
+
+    .royal-glow {
+      box-shadow: 0 4px 30px rgba(212, 175, 55, 0.28);
+    }
+
+    @keyframes royalShimmer {
+      0% { transform: translateX(-150%) skewX(-25deg); }
+      40% { transform: translateX(150%) skewX(-25deg); }
+      100% { transform: translateX(150%) skewX(-25deg); }
+    }
+    .shimmer-active {
+      position: relative;
+      overflow: hidden;
+    }
+    .shimmer-active::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(60deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%);
+      animation: royalShimmer 4s infinite;
+      pointer-events: none;
+    }
+
+    @keyframes coinFloat {
+      0%, 100% { transform: translateY(0px) rotate(5deg) scale(1); }
+      50% { transform: translateY(-8px) rotate(1deg) scale(1.04); }
+    }
+    .floating-coin {
+      animation: coinFloat 3.8s ease-in-out infinite;
+    }
+
+    @keyframes auraPulse {
+      0%, 100% { opacity: 0.35; transform: scale(0.95); }
+      50% { opacity: 0.8; transform: scale(1.15); }
+    }
+    .coin-aura {
+      animation: auraPulse 3.8s ease-in-out infinite;
+    }
+
+    @keyframes crownFloat {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-4px) rotate(2deg); }
+    }
+    .floating-crown {
+      animation: crownFloat 3s ease-in-out infinite;
+    }
+
+    html, body { overflow-x: hidden; max-width: 100%; user-select: none; }
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+
+<body class="bg-[#030305] text-gray-200 font-sans flex justify-center min-h-screen">
+
+  <!-- ডাইনামিক আইল্যান্ড গ্লাস অ্যালার্ট -->
+  <div id="royal-toast" class="fixed top-3 left-1/2 -translate-x-1/2 z-[250] transition-all duration-300 ease-out pointer-events-none opacity-0 -translate-y-8">
+    <div class="px-4 py-2 rounded-full bg-[#121319]/95 border border-gold-500/40 backdrop-blur-xl shadow-2xl flex items-center gap-2 text-xs text-gold-200 font-sans whitespace-nowrap">
+      <span class="w-2 h-2 rounded-full bg-gold-400 animate-ping"></span>
+      <i id="toast-icon" class="fa-solid fa-circle-check text-gold-400 text-xs"></i>
+      <span id="toast-msg" class="font-semibold tracking-wide">Action Successful</span>
+    </div>
+  </div>
+
+  <!-- মোবাইল অ্যাপ কনটেইনার -->
+  <div class="w-full max-w-[430px] bg-royalDark min-h-screen pb-32 relative shadow-2xl flex flex-col border-x border-gold-500/10 overflow-x-hidden">
+
+    <!-- মেইন কন্টেন্ট এরিয়া -->
+    <main class="flex-1 px-4 pt-4 space-y-3.5">
+
+      <!-- ১. প্রোফাইল ও ওয়েলকাম সেকশন (Royal ID সহ) -->
+      <div class="flex items-center justify-between pb-1">
+        <div class="flex items-center gap-3">
+          
+          <!-- পারফেক্ট রাউন্ড প্রোফাইল ছবি ও মুকুট ব্যাজ -->
+          <div class="relative p-0.5 rounded-full bg-gradient-to-tr from-gold-600 via-gold-300 to-amber-200 shadow-lg flex-shrink-0 cursor-pointer" onclick="location.href='profile.html'">
+            <img 
+              id="home-avatar"
+              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" 
+              alt="Avatar" 
+              class="w-12 h-12 rounded-full object-cover border-2 border-royalDark"
+            />
+            <div class="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-[#08080B] border border-gold-400/60 shadow flex items-center justify-center">
+              <i class="fa-solid fa-crown text-[9px] text-gold-400"></i>
+            </div>
+          </div>
+
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <h2 class="font-bold text-base text-white tracking-wide truncate" id="home-user-name">Royal Knight</h2>
+              <i class="fa-solid fa-circle-check text-gold-400 text-sm flex-shrink-0"></i>
+            </div>
+            <div class="flex items-center gap-1.5 pt-0.5">
+              <span class="text-[10.5px] text-gold-300 font-mono font-bold" id="home-royal-id">#RC-000000</span>
+              <span class="text-[10px] text-gray-500">• Royal Time</span>
+            </div>
+            
+            <div class="flex items-center gap-2 mt-1.5">
+              <span id="account-status-tag" class="bg-red-500/15 border border-red-400/40 text-red-300 text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm">
+                <i class="fa-solid fa-lock text-[9px] text-red-400"></i> Inactive
+              </span>
+              <a href="royal-chain.html?tab=tiers" class="bg-white/5 hover:bg-gold-500/20 border border-white/10 hover:border-gold-500/30 text-gray-300 text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center gap-1 transition">
+                <i class="fa-solid fa-shield text-[9px] text-gold-400"></i> <span id="home-rank-tag">Level 1 (প্রহরী)</span> <i class="fa-solid fa-chevron-right text-[8px] text-gray-500"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- নোটিফিকেশন বাটন -->
+        <button onclick="openNotificationModal()" class="w-10 h-10 rounded-2xl bg-royalCard border border-gold-500/25 flex items-center justify-center text-gray-300 hover:text-gold-400 active:scale-95 transition relative flex-shrink-0 shadow-sm" title="নোটিফিকেশন">
+          <i class="fa-regular fa-bell text-base"></i>
+          <span id="notif-ping" class="w-2 h-2 rounded-full bg-gold-400 absolute top-2.5 right-2.5 ring-2 ring-royalDark animate-ping"></span>
+          <span id="notif-dot" class="w-2 h-2 rounded-full bg-gold-400 absolute top-2.5 right-2.5"></span>
+        </button>
+      </div>
+
+      <!-- ২. ব্যালেন্স কার্ড -->
+      <div class="gold-metallic-bg rounded-3xl p-5 text-gray-950 shadow-2xl royal-glow shimmer-active relative overflow-hidden flex items-center justify-between gap-2">
+        <i class="fa-solid fa-crown absolute -right-6 -bottom-6 text-9xl opacity-15 pointer-events-none text-black"></i>
+
+        <div class="flex-1 min-w-0 relative z-10 space-y-1">
+          <div class="flex items-center gap-2 text-amber-950 font-extrabold text-xs tracking-wider uppercase">
+            <span>Total Balance</span>
+            <button onclick="toggleBalance()" class="text-amber-900 hover:text-black p-0.5">
+              <i id="eye-icon" class="fa-solid fa-eye text-sm"></i>
+            </button>
+          </div>
+
+          <div class="flex items-baseline gap-1.5 py-0.5">
+            <span class="text-3xl font-black tracking-tight text-black drop-shadow font-sans truncate" id="balance-amount">0.00</span>
+            <span class="text-sm font-black uppercase text-amber-950 tracking-wider">RC</span>
+          </div>
+
+          <div class="text-xs text-amber-950/85 font-medium truncate">
+            Available: <span class="font-bold text-black" id="available-amount">0.00</span> <span class="text-[10px] font-black">RC</span>
+          </div>
+
+          <div class="pt-2">
+            <a href="withdraw.html" class="inline-flex items-center gap-2 px-4 py-2 bg-black/90 hover:bg-black text-gold-300 text-xs font-bold rounded-full shadow-lg border border-gold-400/50 active:scale-95 transition">
+              <i class="fa-solid fa-wallet text-gold-400"></i>
+              <span>Wallet</span>
+              <i class="fa-solid fa-chevron-right text-[9px]"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="relative w-28 h-28 flex items-center justify-center flex-shrink-0 cursor-pointer" onclick="showToast('Royal Clans Coin (RC) - 1 RC = ৳1.00', 'fa-coins')">
+          <div class="absolute w-24 h-24 bg-yellow-400/35 rounded-full blur-xl coin-aura pointer-events-none"></div>
+          <img 
+            id="main-rc-coin"
+            src="https://i.ibb.co.com/G329sgvj/file-000000009c8881fba832487fa100ac4e.png" 
+            alt="RC Coin" 
+            class="w-24 h-24 object-contain drop-shadow-[0_12px_25px_rgba(0,0,0,0.75)] floating-coin relative z-10"
+            onerror="this.src='https://cdn-icons-png.flaticon.com/512/217/217853.png'"
+          />
+        </div>
+      </div>
+
+      <!-- ৩. প্রমোশনাল ব্যানার স্লাইডার -->
+      <div class="relative overflow-hidden rounded-3xl border border-gold-500/30 shadow-xl bg-royalCard h-[160px] group">
+        <div id="promo-slider-track" class="flex transition-transform duration-500 ease-out h-full w-full"></div>
+        <div class="absolute bottom-2.5 left-4 flex items-center gap-1.5 z-20 pointer-events-none" id="promo-dots"></div>
+      </div>
+
+      <!-- পর্যালোচনাধীন (In Review) সতর্কতা ব্যানার -->
+      <div id="home-review-banner" class="hidden rounded-2xl p-3 bg-amber-950/40 border border-amber-500/40 shadow-md space-y-1">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold text-amber-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-user-clock animate-pulse"></i> অ্যাকাউন্ট পর্যালোচনাধীন (Under Review)
+          </span>
+          <span class="text-[9px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">যাচাই চলছে 🔒</span>
+        </div>
+        <p class="text-[10px] text-gray-300 leading-snug">
+          আপনার অ্যাকাউন্ট নিরাপত্তা পর্যালোচনায় রয়েছে। আপনি টাস্ক করে সাধারণ আয় অব্যাহত রাখতে পারবেন, তবে নিরাপত্তা যাচাই সম্পন্ন না হওয়া পর্যন্ত ক্যাশআউট সাময়িকভাবে স্থগিত থাকবে।
+        </p>
+      </div>
+
+      <!-- অ্যাক্টিভেশন ব্যানার (Inactive অবস্থায়) -->
+      <div id="activation-banner" class="rounded-3xl p-4 bg-gradient-to-r from-[#ff385c] via-[#ff5833] to-[#ff7d1a] text-white shadow-xl relative overflow-hidden transition-all">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white text-xl flex-shrink-0 shadow-inner">
+            <i class="fa-solid fa-triangle-exclamation animate-bounce"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-extrabold text-sm text-white tracking-wide">আপনার একাউন্ট একটিভ নয়!</h3>
+            <p class="text-[11px] text-white/90">একাউন্ট একটিভ করে আনলিমিটেড ইনকাম আনলক করুন 🎁</p>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-2 border-t border-white/20 flex items-center justify-between">
+          <span class="text-[11px] font-bold text-white/90" id="banner-fee-text">এককালীন ফি: ৳৩০.০০</span>
+          <a href="activate.html" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-[#ff4522] rounded-full text-xs font-black shadow-lg hover:bg-gold-100 active:scale-95 transition">
+            <i class="fa-solid fa-bolt text-xs"></i>
+            <span>Active Now</span>
+            <i class="fa-solid fa-arrow-right text-[9px]"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- লোন নোটিশ বক্স (Loan অবস্থায়) -->
+      <div id="home-loan-banner" class="hidden rounded-2xl p-3 bg-emerald-950/40 border border-emerald-500/40 shadow-md space-y-1.5">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-bold text-emerald-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-circle-info"></i> লোন তথ্য বিবরণী
+          </span>
+          <span class="font-bold text-gray-300">বাকি লোন: <strong class="text-gold-400" id="home-loan-amount">৩৫.০০৳</strong></span>
+        </div>
+        <p class="text-[10px] text-gray-300 leading-snug">
+          ⚠ আপনি ৩৫.০০ টাকা ধারে ভেরিফাই করেছেন। এখন কাজ করে অথবা ডিপোজিট করে ধার পরিশোধ করতে পারবেন এবং তারপর থেকে যা আয় করবেন তাই উত্তোলন করতে পারবেন।
+        </p>
+      </div>
+
+      <!-- রয়্যাল চেইন ব্যানার (১২টি পদবী ও শীর্ষ দরবার) -->
+      <div class="bg-royalCard border border-gold-500/25 rounded-2xl p-3.5 shadow-md space-y-2.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-xl bg-gold-500/10 border border-gold-500/30 flex items-center justify-center text-gold-400 text-sm flex-shrink-0">
+              <i class="fa-solid fa-crown floating-crown"></i>
+            </div>
+            <div class="min-w-0">
+              <h4 class="font-bold text-xs text-white tracking-wide font-royal">Royal Hall of Fame</h4>
+              <p class="text-[10px] text-gray-400 leading-none">১২টি রাজকীয় পদবী ও শীর্ষ দরবার</p>
+            </div>
+          </div>
+          <span class="text-[9px] bg-gold-500/15 text-gold-300 font-bold px-2 py-0.5 rounded-full border border-gold-500/30 uppercase tracking-widest flex-shrink-0">Live</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <a href="royal-chain.html?tab=tiers" class="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-gold-500/10 border border-gold-500/25 text-gray-200 font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition">
+            <i class="fa-solid fa-medal text-gold-400 text-xs"></i>
+            <span>১২টি পদবী</span>
+          </a>
+
+          <a href="royal-chain.html?tab=chain" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-gold-600 via-gold-400 to-amber-500 text-black font-extrabold text-xs flex items-center justify-center gap-2 active:scale-95 transition shadow-md">
+            <i class="fa-solid fa-trophy text-xs"></i>
+            <span>শীর্ষ দরবার</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- ৪. আর্নিংস ওভারভিউ -->
+      <div>
+        <div class="flex items-center justify-between mb-2.5 px-1">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-gold-400 text-sm"></i>
+            <h3 class="font-bold text-sm text-gray-200">Earnings Overview</h3>
+          </div>
+          <a href="earn.html" class="text-xs text-gold-400 hover:text-gold-300 font-medium flex items-center gap-1">
+            View All <i class="fa-solid fa-chevron-right text-[9px]"></i>
+          </a>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2.5">
+          <a href="earn.html" class="bg-royalCard border border-gold-500/20 hover:border-gold-500/40 cursor-pointer rounded-2xl p-3 flex flex-col justify-between shadow-sm active:scale-95 transition">
+            <div class="w-7 h-7 rounded-lg bg-gold-500/10 border border-gold-500/25 flex items-center justify-center text-gold-400 text-xs mb-2">
+              <i class="fa-solid fa-video"></i>
+            </div>
+            <span class="text-[11px] text-gray-400 font-normal">Ads Earnings</span>
+            <div class="flex items-center gap-1 mt-0.5">
+              <span class="text-sm font-bold text-white font-mono" id="stat-ads-earn">0.00</span>
+              <span class="text-[10px] text-gold-400 font-black">RC</span>
+            </div>
+            <svg class="w-full h-5 mt-2 stroke-gold-400 fill-none" viewBox="0 0 100 25">
+              <path d="M0 20 Q 25 15, 50 18 T 100 5" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </a>
+
+          <a href="refer.html" class="bg-royalCard border border-gold-500/20 hover:border-gold-500/40 cursor-pointer rounded-2xl p-3 flex flex-col justify-between shadow-sm active:scale-95 transition">
+            <div class="w-7 h-7 rounded-lg bg-gold-500/10 border border-gold-500/25 flex items-center justify-center text-gold-400 text-xs mb-2">
+              <i class="fa-solid fa-user-group"></i>
+            </div>
+            <span class="text-[11px] text-gray-400 font-normal">Referral Earn</span>
+            <div class="flex items-center gap-1 mt-0.5">
+              <span class="text-sm font-bold text-white font-mono" id="stat-ref-earn">0.00</span>
+              <span class="text-[10px] text-gold-400 font-black">RC</span>
+            </div>
+            <svg class="w-full h-5 mt-2 stroke-gold-500 fill-none" viewBox="0 0 100 25">
+              <path d="M0 18 Q 30 22, 60 12 T 100 8" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </a>
+
+          <a href="earn.html" class="bg-royalCard border border-gold-500/20 hover:border-gold-500/40 cursor-pointer rounded-2xl p-3 flex flex-col justify-between shadow-sm active:scale-95 transition">
+            <div class="w-7 h-7 rounded-lg bg-gold-500/10 border border-gold-500/25 flex items-center justify-center text-gold-400 text-xs mb-2">
+              <i class="fa-solid fa-clipboard-check"></i>
+            </div>
+            <span class="text-[11px] text-gray-400 font-normal">Task Earnings</span>
+            <div class="flex items-center gap-1 mt-0.5">
+              <span class="text-sm font-bold text-white font-mono" id="stat-task-earn">0.00</span>
+              <span class="text-[10px] text-gold-400 font-black">RC</span>
+            </div>
+            <svg class="w-full h-5 mt-2 stroke-gold-300 fill-none" viewBox="0 0 100 25">
+              <path d="M0 22 Q 25 10, 50 16 T 100 6" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- ৫. কুইক অ্যাক্সেস (দৈনিক বোনাস অন/অফ সাপোর্ট সহ) -->
+      <div>
+        <div class="flex items-center gap-2 mb-2.5 px-1">
+          <i class="fa-solid fa-bolt text-gold-400 text-sm"></i>
+          <h3 class="font-bold text-sm text-gray-200">Quick Access</h3>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2">
+          <a href="refer.html" class="bg-royalCard border border-gold-500/20 rounded-2xl p-2.5 flex flex-col items-center text-center hover:border-gold-400 transition active:scale-95 group shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-gold-500/10 group-hover:bg-gold-500/20 border border-gold-500/30 flex items-center justify-center text-gold-400 text-base mb-1.5 transition">
+              <i class="fa-solid fa-share-nodes"></i>
+            </div>
+            <span class="text-[11px] font-semibold text-white leading-tight">Refer &amp; Earn</span>
+            <span class="text-[9px] text-gray-400 mt-0.5 truncate w-full">Invite Friends</span>
+          </a>
+
+          <a href="withdraw.html" class="bg-royalCard border border-gold-500/20 rounded-2xl p-2.5 flex flex-col items-center text-center hover:border-gold-400 transition active:scale-95 group shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-gold-500/10 group-hover:bg-gold-500/20 border border-gold-500/30 flex items-center justify-center text-gold-400 text-base mb-1.5 transition">
+              <i class="fa-solid fa-wallet"></i>
+            </div>
+            <span class="text-[11px] font-semibold text-white leading-tight">Withdraw</span>
+            <span class="text-[9px] text-gray-400 mt-0.5 truncate w-full">Cash Out</span>
+          </a>
+
+          <button id="daily-bonus-btn" onclick="claimHomeDailyBonus()" class="bg-royalCard border border-gold-500/20 rounded-2xl p-2.5 flex flex-col items-center text-center hover:border-gold-400 transition active:scale-95 group shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-gold-500/10 group-hover:bg-gold-500/20 border border-gold-500/30 flex items-center justify-center text-gold-400 text-base mb-1.5 transition">
+              <i class="fa-solid fa-gift"></i>
+            </div>
+            <span class="text-[11px] font-semibold text-white leading-tight">Daily Bonus</span>
+            <span class="text-[9px] text-emerald-400 mt-0.5 truncate w-full font-bold" id="bonus-status">Claim Now</span>
+          </button>
+
+          <a href="earn.html" class="bg-royalCard border border-gold-500/20 rounded-2xl p-2.5 flex flex-col items-center text-center hover:border-gold-400 transition active:scale-95 group shadow-sm">
+            <div class="w-10 h-10 rounded-xl bg-gold-500/10 group-hover:bg-gold-500/20 border border-gold-500/30 flex items-center justify-center text-gold-400 text-base mb-1.5 transition">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
+            <span class="text-[11px] font-semibold text-white leading-tight">Tasks</span>
+            <span class="text-[9px] text-gray-400 mt-0.5 truncate w-full">Complete</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- ৬. লাইভ রিসেন্ট অ্যাক্টিভিটি -->
+      <div>
+        <div class="flex items-center justify-between mb-2 px-1">
+          <div class="flex items-center gap-2">
+            <i class="fa-regular fa-clock text-gold-400 text-sm"></i>
+            <h3 class="font-bold text-sm text-gray-200">Recent Activity</h3>
+          </div>
+          <span class="text-[10px] text-gold-400 font-mono" id="activity-status-tag">Live Synced</span>
+        </div>
+
+        <div class="space-y-2" id="activity-list">
+          <div class="bg-royalCard border border-white/5 p-4 rounded-2xl text-center text-xs text-gray-400">
+            <i class="fa-solid fa-spinner animate-spin text-gold-400 mb-1 block"></i>
+            হিস্ট্রি লোড হচ্ছে...
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ৭. বটম ফিক্সড নেভিগেশন বার -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-royalCard/95 backdrop-blur-lg border-t border-gold-500/20 py-2.5 px-3 z-50 rounded-t-2xl shadow-2xl">
+      <div class="grid grid-cols-5 text-center">
+        <button class="flex flex-col items-center justify-center text-gold-400 relative">
+          <div class="w-9 h-7 rounded-xl bg-gold-500/20 border border-gold-500/40 flex items-center justify-center shadow-inner">
+            <i class="fa-solid fa-house text-sm"></i>
+          </div>
+          <span class="text-[10px] font-bold mt-1 text-gold-400">Home</span>
+        </button>
+
+        <a href="earn.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-regular fa-envelope-open text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Earn</span>
+        </a>
+
+        <a href="refer.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-solid fa-user-group text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Refer</span>
+        </a>
+
+        <a href="withdraw.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-regular fa-credit-card text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Withdraw</span>
+        </a>
+
+        <a href="profile.html" class="flex flex-col items-center justify-center text-gray-400 hover:text-gold-400 transition active:scale-95">
+          <i class="fa-regular fa-user text-lg"></i>
+          <span class="text-[10px] font-medium mt-1">Profile</span>
+        </a>
+      </div>
+    </nav>
+
+  </div>
+
+  <!-- ওয়েলকাম মডাল -->
+  <div id="welcome-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4">
+    <div class="bg-royalCard border border-gold-500/40 w-full max-w-[360px] rounded-3xl p-5 space-y-4 shadow-2xl text-center relative overflow-hidden">
+      <div class="absolute -right-8 -bottom-8 w-28 h-28 bg-gold-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+      <div class="w-14 h-14 rounded-2xl bg-gold-500/15 border border-gold-500/40 flex items-center justify-center text-gold-400 text-2xl mx-auto shadow-inner">
+        <i class="fa-solid fa-crown floating-crown"></i>
+      </div>
+
+      <div class="space-y-1">
+        <span class="text-[10px] font-black uppercase text-gold-400 tracking-widest font-royal">ROYAL TIME PORTAL</span>
+        <h3 class="font-extrabold text-base text-white">রাজকীয় দরবারে স্বাগতম! 👑</h3>
+        <p class="text-[11px] text-gray-300 leading-relaxed pt-1">
+          Royal Time-এ আপনি সম্পূর্ণ ফ্রিতে কাজ করে রিয়েল RC কয়েন আয় করতে পারেন।
+        </p>
+      </div>
+
+      <div class="space-y-2 text-left bg-black/50 border border-white/5 rounded-2xl p-3 text-[11px] text-gray-300">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-gift text-gold-400 text-xs"></i>
+          <span><strong id="modal-signup-bonus-text" class="text-gold-400 font-mono">15.00 RC</strong> ওয়েলকাম বোনাস আপনার ওয়ালেটে জমা আছে।</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-video text-emerald-400 text-xs"></i>
+          <span>ভিডিও ও সোশ্যাল টাস্ক সম্পন্ন করে প্রতিদিন আয় করুন।</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-sky-400 text-xs"></i>
+          <span>প্রতি সফল রেফারে পাবেন <strong id="modal-refer-reward-text" class="text-white font-mono">10.00 RC</strong> নগদ রিওয়ার্ড।</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-wallet text-amber-400 text-xs"></i>
+          <span><strong id="modal-min-withdraw-text" class="text-gold-400 font-mono">600 RC</strong> হলে সরাসরি বিকাশ বা নগদে ১২-২৪ ঘণ্টায় পেমেন্ট।</span>
+        </div>
+      </div>
+
+      <button onclick="closeWelcomeModal()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-gold-600 via-gold-400 to-amber-500 hover:brightness-110 active:scale-95 text-black font-extrabold text-xs tracking-wider uppercase shadow-xl transition">
+        কাজ শুরু করুন
+      </button>
+    </div>
+  </div>
+
+  <!-- নোটিফিকেশন মডাল -->
+  <div id="notification-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[200] hidden flex items-start justify-center p-4 pt-12">
+    <div class="bg-royalCard border border-gold-500/30 w-full max-w-[390px] rounded-3xl p-5 space-y-3.5 shadow-2xl max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-gold-500/10 border border-gold-500/25 flex items-center justify-center text-gold-400 text-xs">
+            <i class="fa-regular fa-bell"></i>
+          </div>
+          <div>
+            <h4 class="font-bold text-xs text-white">নোটিফিকেশন সেন্টার</h4>
+            <span class="text-[9px] text-gray-400">সর্বশেষ আপডেট ও জরুরি নোটিশ</span>
+          </div>
+        </div>
+        <button onclick="closeNotificationModal()" class="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <div class="space-y-2.5" id="notification-items-container">
+        <div class="bg-black/50 border border-white/5 rounded-2xl p-3 flex gap-2.5 items-start">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center flex-shrink-0 text-xs mt-0.5">
+            <i class="fa-solid fa-shield-check"></i>
+          </div>
+          <div class="space-y-0.5 min-w-0">
+            <h5 class="text-xs font-bold text-white" id="notif-acc-title">অ্যাকাউন্ট ভেরিফিকেশন</h5>
+            <p class="text-[10px] text-gray-400 leading-snug" id="notif-acc-desc">আপনার অ্যাকাউন্ট স্ট্যাটাস নিরাপদ এবং সুরক্ষিত রয়েছে।</p>
+            <span class="text-[9px] text-gray-500 font-mono block pt-0.5">আজকে</span>
+          </div>
+        </div>
+
+        <div class="bg-black/50 border border-white/5 rounded-2xl p-3 flex gap-2.5 items-start">
+          <div class="w-7 h-7 rounded-lg bg-gold-500/15 text-gold-400 flex items-center justify-center flex-shrink-0 text-xs mt-0.5">
+            <i class="fa-solid fa-gift"></i>
+          </div>
+          <div class="space-y-0.5 min-w-0">
+            <h5 class="text-xs font-bold text-white">দৈনিক বোনাস সুযোগ</h5>
+            <p class="text-[10px] text-gray-400 leading-snug" id="notif-daily-desc">প্রতি ২৪ ঘণ্টায় বিনামূল্যে RC কয়েন ক্লেইম করতে ভুলবেন না।</p>
+            <span class="text-[9px] text-gray-500 font-mono block pt-0.5">প্রতিদিন লাইভ</span>
+          </div>
+        </div>
+      </div>
+
+      <button onclick="markAllNotificationsAsRead()" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 font-bold text-xs active:scale-95 transition border border-white/10">
+        সবগুলো পঠিত হিসেবে চিহ্নিত করুন
+      </button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { 
+      initSuperEngine, 
+      executeRewardCredit, 
+      fetchLiveActivities, 
+      triggerHaptic, 
+      getImmediateCachedProfile,
+      calculateUserRank,
+      apiFetch,
+      tg, 
+      db 
+    } from './royal-core.js';
+
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    let activeUser = null;
+    let activeUserId = null;
+    let isBalanceHidden = false;
+
+    let liveConfig = {
+      signupBonus: 15.00,
+      dailyBonus: 10.00,
+      dailyBonusEnabled: true,
+      minWithdraw: 600.00,
+      referReward: 10.00,
+      activationFee: 30.00
+    };
+
+    function loadHomeCachedStateImmediately() {
+      try {
+        const cached = getImmediateCachedProfile();
+        if (cached.name && cached.name !== 'Royal Member') {
+          document.getElementById('home-user-name').innerText = cached.name;
+        }
+        if (cached.royalId) {
+          document.getElementById('home-royal-id').innerText = `#${cached.royalId}`;
+        }
+        if (cached.balance !== undefined && !isNaN(cached.balance)) {
+          document.getElementById('balance-amount').innerText = cached.balance.toFixed(2);
+          document.getElementById('available-amount').innerText = cached.balance.toFixed(2);
+        }
+        if (cached.photoUrl) {
+          document.getElementById('home-avatar').src = cached.photoUrl;
+        }
+        if (cached.referrals !== undefined) {
+          const rankInfo = calculateUserRank(cached.referrals);
+          document.getElementById('home-rank-tag').innerText = `Level ${rankInfo.current.level} (${rankInfo.current.bn})`;
+        }
+        if (cached.status) {
+          updateStatusTagQuick(cached.status, cached.loanRemaining);
+        }
+      } catch (e) {}
+    }
+
+    function updateStatusTagQuick(st, remainingLoan = 0) {
+      const statusTag = document.getElementById('account-status-tag');
+      if (!statusTag) return;
+
+      if (st === 'in_review') {
+        statusTag.innerHTML = `<i class="fa-solid fa-clock text-[9px] text-amber-400"></i> In Review`;
+        statusTag.className = "bg-amber-500/20 border border-amber-400/50 text-amber-300 text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm font-mono";
+      } else if (st === 'inactive') {
+        statusTag.innerHTML = `<i class="fa-solid fa-lock text-[9px] text-red-400"></i> Inactive`;
+        statusTag.className = "bg-red-500/15 border border-red-400/40 text-red-300 text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm";
+      } else if (st === 'loan' && remainingLoan > 0) {
+        statusTag.innerHTML = `<i class="fa-solid fa-clock text-[9px] text-amber-400"></i> লোন সক্রিয়`;
+        statusTag.className = "bg-amber-500/15 border border-amber-400/40 text-amber-300 text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm";
+      } else {
+        statusTag.innerHTML = `<i class="fa-solid fa-check text-[9px] text-emerald-400"></i> Active Member`;
+        statusTag.className = "bg-emerald-500/15 border border-emerald-400/40 text-emerald-300 text-[10px] px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm";
+      }
+    }
+
+    loadHomeCachedStateImmediately();
+
+    let promoBanners = [
+      {
+        imageUrl: "https://i.ibb.co.com/G329sgvj/file-000000009c8881fba832487fa100ac4e.png",
+        actionUrl: "refer.html"
+      },
+      {
+        imageUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80",
+        actionUrl: "earn.html"
+      }
+    ];
+
+    async function loadDynamicBanners() {
+      try {
+        const snap = await getDoc(doc(db, "settings", "banners"));
+        if (snap.exists() && Array.isArray(snap.data().list) && snap.data().list.length > 0) {
+          promoBanners = snap.data().list;
+        }
+      } catch (err) {}
+      renderBannerSlider();
+    }
+
+    function renderBannerSlider() {
+      const track = document.getElementById('promo-slider-track');
+      const dotsContainer = document.getElementById('promo-dots');
+      if (!track || !dotsContainer) return;
+      track.innerHTML = '';
+      dotsContainer.innerHTML = '';
+
+      promoBanners.forEach((b, idx) => {
+        const slide = document.createElement('div');
+        slide.className = "min-w-full h-full relative cursor-pointer select-none overflow-hidden";
+        const bannerImgSrc = b.imageUrl || b.bannerUrl || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80';
+        slide.onclick = () => handleBannerClick(b.actionUrl || 'earn.html');
+        slide.innerHTML = `
+          <img src="${bannerImgSrc}" alt="Royal Banner" class="w-full h-full object-cover object-center" draggable="false" />
+          <div class="absolute bottom-2.5 right-2.5 z-10">
+            <div class="px-3 py-1 rounded-full bg-black/45 backdrop-blur-md border border-white/20 text-gold-300 text-[10px] font-bold flex items-center gap-1.5 shadow-lg">
+              <span>বিস্তারিত দেখুন</span>
+              <i class="fa-solid fa-arrow-right text-[8px]"></i>
+            </div>
+          </div>
+        `;
+        track.appendChild(slide);
+
+        const dot = document.createElement('span');
+        dot.className = idx === 0 ? "w-4 h-1 rounded-full bg-gold-400 transition-all duration-300" : "w-1.5 h-1 rounded-full bg-white/40 transition-all duration-300";
+        dotsContainer.appendChild(dot);
+      });
+      startBannerCarousel();
+    }
+
+    let bannerInterval = null;
+    let currentSlide = 0;
+
+    function moveToBannerSlide(idx) {
+      const track = document.getElementById('promo-slider-track');
+      const dots = document.getElementById('promo-dots')?.children;
+      if (!track || promoBanners.length <= 1 || !dots) return;
+
+      currentSlide = (idx + promoBanners.length) % promoBanners.length;
+      track.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+      for (let i = 0; i < dots.length; i++) {
+        dots[i].className = i === currentSlide ? "w-4 h-1 rounded-full bg-gold-400 transition-all duration-300" : "w-1.5 h-1 rounded-full bg-white/40 transition-all duration-300";
+      }
+    }
+
+    function startBannerCarousel() {
+      if (bannerInterval) clearInterval(bannerInterval);
+      if (promoBanners.length <= 1) return;
+      bannerInterval = setInterval(() => {
+        moveToBannerSlide(currentSlide + 1);
+      }, 4200);
+    }
+
+    window.handleBannerClick = function(targetUrl) {
+      triggerHaptic('light');
+      if (!targetUrl) return;
+      if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://') || targetUrl.startsWith('t.me')) {
+        if (tg && tg.openLink) tg.openLink(targetUrl);
+        else window.open(targetUrl, '_blank');
+      } else {
+        location.href = targetUrl;
+      }
+    };
+
+    async function initDashboard() {
+      try {
+        const { userId, userData } = await initSuperEngine();
+        activeUser = userData;
+        activeUserId = userId;
+
+        await loadLiveConfigs();
+        updateHomeUI(userData);
+        await loadRecentActivities(userId);
+        await loadDynamicBanners();
+        checkAndShowWelcomeModal();
+      } catch (err) {
+        console.warn("Dashboard sync notice:", err);
+      }
+    }
+
+    async function loadLiveConfigs() {
+      try {
+        const res = await apiFetch('/api/config');
+        if (res.success && res.config) {
+          liveConfig = { ...liveConfig, ...res.config };
+        }
+      } catch (e) {}
+
+      const welcomeSignupEl = document.getElementById('modal-signup-bonus-text');
+      const welcomeRefEl = document.getElementById('modal-refer-reward-text');
+      const welcomeWithdrawEl = document.getElementById('modal-min-withdraw-text');
+      const bannerFeeEl = document.getElementById('banner-fee-text');
+
+      if (welcomeSignupEl) welcomeSignupEl.innerText = `${liveConfig.signupBonus.toFixed(2)} RC`;
+      if (welcomeRefEl) welcomeRefEl.innerText = `${liveConfig.referReward.toFixed(2)} RC`;
+      if (welcomeWithdrawEl) welcomeWithdrawEl.innerText = `${liveConfig.minWithdraw.toFixed(0)} RC`;
+      if (bannerFeeEl) bannerFeeEl.innerText = `এককালীন ফি: ৳${liveConfig.activationFee.toFixed(2)}`;
+
+      updateDailyBonusButtonState();
+    }
+
+    function updateDailyBonusButtonState() {
+      const bonusStatus = document.getElementById('bonus-status');
+      if (!bonusStatus) return;
+
+      if (liveConfig.dailyBonusEnabled === false) {
+        bonusStatus.innerText = "বন্ধ রয়েছে";
+        bonusStatus.className = "text-[9px] text-red-400 mt-0.5 truncate w-full font-bold";
+        return;
+      }
+
+      if (activeUser?.daily_bonus_claimed === true) {
+        bonusStatus.innerText = "Claimed";
+        bonusStatus.className = "text-[9px] text-gray-500 mt-0.5 truncate w-full font-bold";
+      } else {
+        bonusStatus.innerText = `Claim ${liveConfig.dailyBonus.toFixed(0)} RC`;
+        bonusStatus.className = "text-[9px] text-emerald-400 mt-0.5 truncate w-full font-bold";
+      }
+    }
+
+    function updateHomeUI(d) {
+      document.getElementById('home-user-name').innerText = d.name || "Royal Knight";
+      if (d.photoUrl) document.getElementById('home-avatar').src = d.photoUrl;
+
+      const royalId = d.royal_id || activeUserId.replace('tg_', 'RC-');
+      document.getElementById('home-royal-id').innerText = `#${royalId}`;
+
+      const bal = Number(d.balance || 0);
+      document.getElementById('balance-amount').innerText = bal.toFixed(2);
+      document.getElementById('available-amount').innerText = bal.toFixed(2);
+
+      const rankInfo = calculateUserRank(d.user_referrals || 0);
+      document.getElementById('home-rank-tag').innerText = `Level ${rankInfo.current.level} (${rankInfo.current.bn})`;
+
+      document.getElementById('stat-ads-earn').innerText = Number(d.ads_earnings || 0).toFixed(2);
+      document.getElementById('stat-ref-earn').innerText = Number(d.referral_earnings || 0).toFixed(2);
+      document.getElementById('stat-task-earn').innerText = Number(d.task_earnings || 0).toFixed(2);
+
+      const actBanner = document.getElementById('activation-banner');
+      const loanBanner = document.getElementById('home-loan-banner');
+      const reviewBanner = document.getElementById('home-review-banner');
+      const remainingLoan = Number(d.loan_remaining || 0);
+      const st = d.account_status || 'inactive';
+
+      updateStatusTagQuick(st, remainingLoan);
+
+      if (st === 'in_review') {
+        actBanner.classList.add('hidden');
+        loanBanner.classList.add('hidden');
+        reviewBanner.classList.remove('hidden');
+      } else if (st === 'inactive') {
+        actBanner.classList.remove('hidden');
+        loanBanner.classList.add('hidden');
+        reviewBanner.classList.add('hidden');
+      } else if (st === 'loan' && remainingLoan > 0) {
+        actBanner.classList.add('hidden');
+        loanBanner.classList.remove('hidden');
+        reviewBanner.classList.add('hidden');
+        document.getElementById('home-loan-amount').innerText = `${remainingLoan.toFixed(2)}৳`;
+      } else {
+        actBanner.classList.add('hidden');
+        loanBanner.classList.add('hidden');
+        reviewBanner.classList.add('hidden');
+      }
+
+      updateDailyBonusButtonState();
+    }
+
+    function checkAndShowWelcomeModal() {
+      const isShown = localStorage.getItem('rt_welcome_modal_shown_v1');
+      if (!isShown) {
+        setTimeout(() => {
+          document.getElementById('welcome-modal').classList.remove('hidden');
+          triggerHaptic('medium');
+        }, 600);
+      }
+    }
+
+    window.closeWelcomeModal = function() {
+      triggerHaptic('light');
+      localStorage.setItem('rt_welcome_modal_shown_v1', 'true');
+      document.getElementById('welcome-modal').classList.add('hidden');
+      confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 }, colors: ['#D4AF37', '#FFFDEB', '#F3C544'] });
+      showToast('রয়্যাল টাইমে শুভকামনা!');
+    };
+
+    window.openNotificationModal = function() {
+      triggerHaptic('light');
+      document.getElementById('notification-modal').classList.remove('hidden');
+    };
+    window.closeNotificationModal = function() {
+      triggerHaptic('light');
+      document.getElementById('notification-modal').classList.add('hidden');
+    };
+    window.markAllNotificationsAsRead = function() {
+      triggerHaptic('medium');
+      const ping = document.getElementById('notif-ping');
+      const dot = document.getElementById('notif-dot');
+      if (ping) ping.classList.add('hidden');
+      if (dot) dot.classList.add('hidden');
+      closeNotificationModal();
+      showToast('সকল নোটিফিকেশন পঠিত হিসেবে চিহ্নিত হয়েছে');
+    };
+
+    async function loadRecentActivities(userId) {
+      const container = document.getElementById('activity-list');
+      const list = await fetchLiveActivities(userId, 5);
+
+      if (!list || list.length === 0) {
+        container.innerHTML = `
+          <div class="bg-royalCard border border-white/5 p-4 rounded-2xl text-center space-y-1">
+            <i class="fa-regular fa-folder-open text-gray-500 text-lg"></i>
+            <h5 class="text-xs font-bold text-gray-400">এখনও কোনো হিস্ট্রি নেই</h5>
+            <p class="text-[10px] text-gray-500">টাস্ক সম্পন্ন বা বোনাস ক্লেইম করলে এখানে দেখতে পাবেন</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(item => {
+        const isCredit = item.type === 'credit';
+        const title = item.title || "Reward";
+        let icon = "fa-coins";
+        if (title.includes("Signup")) icon = "fa-gift";
+        else if (title.includes("Referral")) icon = "fa-user-plus";
+        else if (title.includes("Daily")) icon = "fa-calendar-check";
+        else if (title.includes("Ad")) icon = "fa-video";
+
+        const dateStr = item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString('bn-BD', { hour: '2-digit', minute: '2-digit' }) : 'সম্প্রতি';
+
+        return `
+          <div class="bg-royalCard border border-white/5 hover:border-gold-500/25 p-3 rounded-2xl flex items-center justify-between transition shadow-sm">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-gold-500/10 border border-gold-500/25 flex items-center justify-center text-gold-400 flex-shrink-0">
+                <i class="fa-solid ${icon} text-sm"></i>
+              </div>
+              <div class="min-w-0">
+                <h5 class="text-xs font-bold text-white truncate">${title}</h5>
+                <p class="text-[10px] text-gray-400 truncate">${item.description || 'Verified'}</p>
+              </div>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <span class="text-xs font-bold text-gold-400 font-mono">${isCredit ? '+' : '-'}${Number(item.amount).toFixed(2)} RC</span>
+              <p class="text-[9px] text-gray-500 mt-0.5">${dateStr}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Backend-authoritative Daily Bonus Claim
+    window.claimHomeDailyBonus = async function() {
+      triggerHaptic('medium');
+
+      if (liveConfig.dailyBonusEnabled === false) {
+        showToast('দৈনিক বোনাস বর্তমানে বন্ধ রয়েছে!', 'fa-circle-xmark');
+        return;
+      }
+
+      if (activeUser?.daily_bonus_claimed === true) {
+        showToast('আজকের বোনাস নেওয়া হয়ে গেছে!', 'fa-clock');
+        return;
+      }
+
+      const btnStatus = document.getElementById('bonus-status');
+      btnStatus.innerText = "Processing...";
+
+      const bonusToCredit = Number(liveConfig.dailyBonus || 10.00);
+      const res = await executeRewardCredit(activeUserId, bonusToCredit, 'daily');
+
+      if (res.success) {
+        activeUser.balance = res.newBalance;
+        activeUser.loan_remaining = res.remainingLoan;
+        activeUser.account_status = res.accountStatus;
+        activeUser.daily_bonus_claimed = true;
+
+        updateHomeUI(activeUser);
+        await loadRecentActivities(activeUserId);
+
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 }, colors: ['#D4AF37', '#FFFDEB', '#F3C544'] });
+        if (res.loanSettled > 0) {
+          showToast(`${bonusToCredit.toFixed(2)} RC লোনে পরিশোধ হয়েছে! (বাকি ${res.remainingLoan.toFixed(2)}৳)`);
+        } else {
+          showToast(`+${bonusToCredit.toFixed(2)} RC Daily Bonus Added! 🎁`);
+        }
+      } else {
+        updateDailyBonusButtonState();
+        showToast(res.message || 'বোনাস প্রসেসিং ব্যর্থ হয়েছে');
+      }
+    };
+
+    window.toggleBalance = function() {
+      triggerHaptic('light');
+      const balEl = document.getElementById('balance-amount');
+      const avlEl = document.getElementById('available-amount');
+      const icon = document.getElementById('eye-icon');
+
+      if (!isBalanceHidden) {
+        balEl.innerText = '••••••';
+        avlEl.innerText = '••••••';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        balEl.innerText = Number(activeUser?.balance || 0).toFixed(2);
+        avlEl.innerText = Number(activeUser?.balance || 0).toFixed(2);
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+      isBalanceHidden = !isBalanceHidden;
+    };
+
+    let toastTimer = null;
+    window.showToast = function(msg, icon = 'fa-circle-check') {
+      const toast = document.getElementById('royal-toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+
+      if (!toast) return;
+
+      toastMsg.innerText = msg;
+      toastIcon.className = `fa-solid ${icon} text-gold-400 text-xs`;
+
+      clearTimeout(toastTimer);
+
+      toast.classList.remove('opacity-0', '-translate-y-8', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+        toast.classList.add('opacity-0', '-translate-y-8', 'pointer-events-none');
+      }, 2200);
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => initDashboard());
+    } else {
+      initDashboard();
+    }
+  </script>
+
+</body>
+</html>

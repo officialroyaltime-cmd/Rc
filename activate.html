@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Royal Time - Account Activation</title>
+  
+  <!-- Telegram WebApp Script -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Google Premium Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Confetti Script -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            royal: ['Cinzel', 'serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            gold: {
+              100: '#FFFDEB',
+              200: '#FDEFB4',
+              300: '#F9DD78',
+              400: '#F3C544',
+              500: '#D4AF37',
+              600: '#AA820A',
+              700: '#7F6000',
+            },
+            royalDark: '#08080B',
+            royalCard: '#121319',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .gold-metallic-bg { background: linear-gradient(135deg, #FDECA6 0%, #D4AF37 38%, #936C0A 75%, #F7E493 100%); }
+    .royal-glow { box-shadow: 0 4px 25px rgba(212, 175, 55, 0.22); }
+    html, body { overflow-x: hidden; max-width: 100%; user-select: none; }
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+
+<body class="bg-[#030305] text-gray-200 font-sans flex justify-center min-h-screen">
+
+  <div id="royal-toast" class="fixed top-3 left-1/2 -translate-x-1/2 z-[250] transition-all duration-300 ease-out pointer-events-none opacity-0 -translate-y-8">
+    <div class="px-4 py-2 rounded-full bg-[#121319]/95 border border-gold-500/40 backdrop-blur-xl shadow-2xl flex items-center gap-2 text-xs text-gold-200 font-sans whitespace-nowrap">
+      <span class="w-2 h-2 rounded-full bg-gold-400 animate-ping"></span>
+      <i id="toast-icon" class="fa-solid fa-circle-check text-gold-400 text-xs"></i>
+      <span id="toast-msg" class="font-semibold tracking-wide">Action Successful</span>
+    </div>
+  </div>
+
+  <div class="w-full max-w-[430px] bg-royalDark min-h-screen pb-16 relative shadow-2xl flex flex-col border-x border-gold-500/10 overflow-x-hidden">
+
+    <div class="px-4 pt-4 pb-2.5 flex items-center justify-between border-b border-white/5 bg-royalCard/40">
+      <a href="index.html" class="w-9 h-9 rounded-2xl bg-royalCard border border-gold-500/25 flex items-center justify-center text-gold-400 hover:border-gold-400 active:scale-95 transition shadow-sm">
+        <i class="fa-solid fa-arrow-left text-xs"></i>
+      </a>
+      <div class="text-center">
+        <span class="font-royal text-xs font-black tracking-widest text-gold-400 uppercase flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-shield-halved text-xs"></i> Royal Activation
+        </span>
+        <span class="text-[9px] text-gray-400 font-mono tracking-wider block" id="user-royal-id-label">Royal ID: #RC-000000</span>
+      </div>
+      <div class="w-9"></div>
+    </div>
+
+    <main class="flex-1 px-4 pt-3.5 space-y-4">
+
+      <div id="live-user-status-card" class="hidden rounded-3xl p-4 shadow-xl space-y-2 border"></div>
+
+      <div id="activation-top-banner" class="bg-gradient-to-b from-royalCard to-[#171824] border border-gold-500/30 rounded-3xl p-4 text-center shadow-lg relative overflow-hidden">
+        <div class="w-11 h-11 rounded-2xl bg-gold-500/15 border border-gold-400/30 flex items-center justify-center text-gold-400 text-xl mx-auto shadow-inner mb-2">
+          <i class="fa-solid fa-bolt-lightning animate-pulse"></i>
+        </div>
+        <h2 class="text-sm font-extrabold text-white">অ্যাকাউন্ট ভেরিফিকেশন ও সক্রিয়করণ</h2>
+        <p class="text-[11px] text-gray-400 max-w-[280px] mx-auto leading-relaxed mt-1">
+          ক্যাশআউট, টাস্ক ও আনলিমিটেড ভিডিও ইনকাম আনলক করতে নিচের যেকোনো একটি পদ্ধতি বেছে নিন।
+        </p>
+
+        <div class="bg-black/60 border border-gold-500/20 rounded-2xl p-2.5 mt-3 flex items-center justify-between px-4">
+          <span class="text-[10px] text-gray-400 uppercase tracking-wider font-bold">ONE-TIME FEE</span>
+          <span class="text-lg font-black text-gold-300 font-mono" id="display-activation-fee">৳30.00</span>
+        </div>
+      </div>
+
+      <div id="activation-options-section" class="space-y-3">
+        <label class="text-[11px] font-bold text-gray-300 uppercase tracking-wider px-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-layer-group text-gold-400 text-xs"></i> সক্রিয়করণ পদ্ধতি নির্বাচন করুন
+        </label>
+
+        <!-- ১. bKash -->
+        <div onclick="openCheckoutModal('bkash')" class="cursor-pointer group relative overflow-hidden rounded-3xl p-3.5 border border-[#E2136E]/40 hover:border-[#E2136E] bg-gradient-to-r from-royalCard via-[#210915] to-royalCard transition-all duration-300 shadow-md active:scale-[0.98]">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-[#E2136E]/15 border border-[#E2136E]/40 flex items-center justify-center p-2 flex-shrink-0 shadow-sm">
+                <img src="https://freelogopng.com/images/all_img/1656234841bkash-icon-png.png" alt="bKash" class="w-full h-full object-contain">
+              </div>
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-extrabold text-white">bKash পেমেন্ট</h3>
+                  <span class="bg-[#E2136E]/20 text-[#ff4f9e] border border-[#E2136E]/40 text-[9px] font-black px-2 py-0.2 rounded-full uppercase font-mono">ইনস্ট্যান্ট</span>
+                </div>
+                <p class="text-[10px] text-gray-400">বিকাশে Send Money করে একাউন্ট চালু করুন</p>
+                <div class="flex items-center gap-1 pt-0.5 text-[10px] text-[#ff71b0] font-bold font-mono">
+                  <span id="bkash-fee-text">ফি: ৳৩০.০০</span>
+                  <span>• সরাসরি আজীবন আনলক</span>
+                </div>
+              </div>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-white/5 border border-[#E2136E]/30 flex items-center justify-center text-[#ff4f9e]">
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- ২. Nagad -->
+        <div onclick="openCheckoutModal('nagad')" class="cursor-pointer group relative overflow-hidden rounded-3xl p-3.5 border border-[#F7941D]/40 hover:border-[#F7941D] bg-gradient-to-r from-royalCard via-[#261308] to-royalCard transition-all duration-300 shadow-md active:scale-[0.98]">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-[#F7941D]/15 border border-[#F7941D]/40 flex items-center justify-center p-2 flex-shrink-0 shadow-sm">
+                <img src="https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png" alt="Nagad" class="w-full h-full object-contain">
+              </div>
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-extrabold text-white">Nagad পেমেন্ট</h3>
+                  <span class="bg-[#F7941D]/20 text-[#ffaa47] border border-[#F7941D]/40 text-[9px] font-black px-2 py-0.2 rounded-full uppercase font-mono">নিরাপদ</span>
+                </div>
+                <p class="text-[10px] text-gray-400">নগদে Send Money করে একাউন্ট চালু করুন</p>
+                <div class="flex items-center gap-1 pt-0.5 text-[10px] text-[#ffaa47] font-bold font-mono">
+                  <span id="nagad-fee-text">ফি: ৳৩০.০০</span>
+                  <span>• সরাসরি আজীবন আনলক</span>
+                </div>
+              </div>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-white/5 border border-[#F7941D]/30 flex items-center justify-center text-[#ffaa47]">
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- ৩. লোন -->
+        <div onclick="openLoanModal()" class="cursor-pointer group relative overflow-hidden rounded-3xl p-3.5 border border-gold-500/40 hover:border-gold-400 bg-gradient-to-r from-royalCard via-[#211a0d] to-royalCard transition-all duration-300 shadow-lg active:scale-[0.98]">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-2xl bg-gold-500/15 border border-gold-400/40 flex items-center justify-center text-gold-400 text-xl flex-shrink-0 shadow-inner">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+              </div>
+              <div class="space-y-0.5">
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-extrabold text-white">টাকা নেই? লোন নিন!</h3>
+                  <span class="bg-gold-500/20 text-gold-300 border border-gold-500/40 text-[9px] font-black px-2 py-0.2 rounded-full uppercase font-royal">0৳ Advance</span>
+                </div>
+                <p class="text-[10px] text-gray-400">কোনো টাকা ছাড়াই ৩৫.০০৳ লোন নিয়ে চালু করুন</p>
+                <div class="flex items-center gap-1 pt-0.5 text-[10px] text-gold-400 font-bold">
+                  <span>লোন অ্যামাউন্ট: ৩৫.০০৳</span>
+                  <span>• কাজের আয় থেকে স্বয়ংক্রিয় কর্তন</span>
+                </div>
+              </div>
+            </div>
+            <div class="w-8 h-8 rounded-full bg-white/5 border border-gold-500/30 flex items-center justify-center text-gold-400">
+              <i class="fa-solid fa-chevron-right text-xs"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- চেকআউট মডাল -->
+  <div id="checkout-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[270] hidden flex items-end justify-center">
+    <div class="bg-royalDark border-t border-x border-white/10 w-full max-w-[430px] rounded-t-[32px] p-5 space-y-4 shadow-2xl max-h-[92vh] overflow-y-auto" id="checkout-modal-panel">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl p-1.5 flex items-center justify-center" id="modal-brand-box">
+            <img id="modal-brand-logo" src="" alt="Brand" class="w-full h-full object-contain">
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm text-white" id="modal-brand-title">Payment Gateway</h3>
+            <span class="text-[10px] text-gray-400 block font-mono" id="modal-fee-subtitle">এককালীন ফি: ৳৩০.০০</span>
+          </div>
+        </div>
+        <button onclick="closeCheckoutModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-gray-400 hover:text-white">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <div class="border rounded-2xl p-3 flex items-center justify-between" id="modal-num-card">
+        <div>
+          <span class="text-[10px] text-gray-400 block">এই নম্বরে Send Money করুন:</span>
+          <span class="font-mono text-base font-black text-white tracking-wider" id="modal-admin-num">01840123122</span>
+        </div>
+        <button onclick="copyModalNumber()" class="px-3.5 py-2 text-white rounded-xl text-xs font-black shadow active:scale-95 transition" id="modal-copy-btn">
+          Copy
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-[10px] font-bold text-gray-300 uppercase tracking-wider px-1">আপনার প্রেরক মোবাইল নম্বর</label>
+          <input type="tel" id="modal-sender-phone" placeholder="01XXXXXXXXX" maxlength="11" class="w-full h-11 bg-black/50 border border-white/10 rounded-xl px-3.5 text-xs text-white focus:outline-none focus:border-gold-400 font-mono">
+        </div>
+
+        <div>
+          <label class="text-[10px] font-bold text-gray-300 uppercase tracking-wider px-1">ট্রানজেকশন আইডি (TrxID)</label>
+          <input type="text" id="modal-sender-trx" placeholder="উদাঃ 8XJ9KL..." class="w-full h-11 bg-black/50 border border-white/10 rounded-xl px-3.5 text-xs text-white focus:outline-none focus:border-gold-400 font-mono uppercase">
+        </div>
+
+        <div>
+          <label class="text-[10px] font-bold text-gray-300 uppercase tracking-wider px-1">পেমেন্ট স্ক্রিনশট আপলোড</label>
+          <div onclick="document.getElementById('modal-screen-file').click()" class="cursor-pointer border border-dashed border-white/20 bg-black/30 rounded-xl p-3 text-center space-y-1">
+            <span class="text-xs text-gray-300 block" id="modal-screen-label">স্ক্রিনশট ছবি নির্বাচন করুন</span>
+            <img id="modal-screen-preview" src="" class="hidden w-full h-28 object-contain rounded-lg mx-auto border border-white/10" />
+            <input type="file" id="modal-screen-file" accept="image/*" class="hidden" onchange="handleModalFile(this)">
+          </div>
+        </div>
+
+        <button id="modal-submit-btn" onclick="submitModalDeposit()" class="w-full py-3.5 rounded-2xl text-white font-extrabold text-xs tracking-wider uppercase shadow-xl flex items-center justify-center gap-2">
+          <span>SUBMIT PAYMENT REQUEST</span>
+          <i class="fa-solid fa-paper-plane text-[10px]"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- লোন কনফার্মেশন মডাল -->
+  <div id="loan-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-[270] hidden flex items-center justify-center p-4">
+    <div class="bg-royalCard border border-gold-500/40 w-full max-w-[370px] rounded-3xl p-5 space-y-3.5 shadow-2xl relative">
+      <div class="w-12 h-12 rounded-2xl bg-gold-500/15 border border-gold-400/40 flex items-center justify-center text-gold-400 text-xl mx-auto shadow-inner">
+        <i class="fa-solid fa-hand-holding-dollar"></i>
+      </div>
+
+      <div class="text-center space-y-1">
+        <h3 class="font-bold text-sm text-white">৩৫.০০৳ লোন ভেরিফিকেশন</h3>
+        <p class="text-[11px] text-gray-400 leading-snug">
+          কোনো অগ্রিম টাকা ছাড়াই আপনার অ্যাকাউন্ট সক্রিয় হবে। কাজের আয় থেকে লোন শোধ হবে।
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2.5 p-2 bg-white/5 rounded-xl border border-white/5 cursor-pointer" onclick="toggleAgreementCheckbox()">
+        <input type="checkbox" id="loan-agree-checkbox" class="w-4 h-4 rounded text-gold-500 cursor-pointer accent-[#D4AF37]" onchange="handleCheckboxChange(this)">
+        <label for="loan-agree-checkbox" class="text-[10px] text-gray-300 cursor-pointer select-none leading-tight font-medium">
+          আমি লোন নীতি ও কাজের আয় থেকে কর্তনের শর্তে সম্মত আছি।
+        </label>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 pt-1 font-sans">
+        <button onclick="closeLoanModal()" class="py-2.5 rounded-xl bg-white/10 text-gray-300 font-bold text-xs">বাতিল</button>
+        <button id="btn-confirm-loan" onclick="confirmLoanAction()" disabled class="py-2.5 rounded-xl bg-gradient-to-r from-gold-600 to-gold-400 text-black font-extrabold text-xs opacity-40 cursor-not-allowed">
+          লোন গ্রহণ করুন
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { 
+      initSuperEngine, 
+      handleActivationReferralReward, 
+      triggerHaptic, 
+      uploadImageToImgBB,
+      getImmediateCachedProfile,
+      apiFetch,
+      tg, 
+      db 
+    } from './royal-core.js';
+
+    import { doc, getDoc, updateDoc, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    let activeUser = null;
+    let activeUserId = null;
+    let activationFeeAmount = 30.00;
+    let paymentConfig = { bkashNum: "01840123122", nagadNum: "01840123122" };
+    let activeMethod = 'bkash';
+    let compressedScreenshotBase64 = "";
+
+    function loadCachedStateImmediately() {
+      try {
+        const cached = getImmediateCachedProfile();
+        if (cached.royalId) {
+          const rTag = document.getElementById('user-royal-id-label');
+          if (rTag) rTag.innerText = `Royal ID: #${cached.royalId}`;
+        }
+      } catch (e) {}
+    }
+    loadCachedStateImmediately();
+
+    async function initActivationPage() {
+      try {
+        const { userId, userData } = await initSuperEngine();
+        activeUser = userData;
+        activeUserId = userId;
+        const rTag = document.getElementById('user-royal-id-label');
+        if (rTag && userData.royal_id) rTag.innerText = `Royal ID: #${userData.royal_id}`;
+
+        await loadPaymentSettings();
+        await renderUserStatusState();
+      } catch (err) {}
+    }
+
+    async function loadPaymentSettings() {
+      try {
+        const setSnap = await getDoc(doc(db, "settings", "payment_methods"));
+        if (setSnap.exists()) {
+          const d = setSnap.data();
+          if (d.bkashNumber) paymentConfig.bkashNum = String(d.bkashNumber).trim();
+          if (d.nagadNumber) paymentConfig.nagadNum = String(d.nagadNumber).trim();
+        }
+      } catch (err) {}
+    }
+
+    async function renderUserStatusState() {
+      const card = document.getElementById('live-user-status-card');
+      const optionsSection = document.getElementById('activation-options-section');
+      const topBanner = document.getElementById('activation-top-banner');
+
+      if (activeUser.account_status === 'active') {
+        topBanner.classList.add('hidden');
+        optionsSection.classList.add('hidden');
+        card.className = "bg-gradient-to-r from-emerald-950/40 via-royalCard to-emerald-950/30 border border-emerald-500/40 rounded-3xl p-5 shadow-xl space-y-3 block text-center";
+        card.innerHTML = `
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-2xl mx-auto"><i class="fa-solid fa-circle-check"></i></div>
+          <h3 class="font-extrabold text-base text-white">আপনার একাউন্ট সম্পূর্ণ সক্রিয়! 🎉</h3>
+          <div class="pt-2 flex gap-2">
+            <a href="earn.html" class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-gold-600 to-gold-400 text-black font-extrabold text-xs">কাজে ফিরে যান</a>
+            <a href="withdraw.html" class="flex-1 py-3 rounded-2xl bg-white/10 text-white font-bold text-xs">উইথড্র পোর্টাল</a>
+          </div>
+        `;
+      }
+    }
+
+    window.openCheckoutModal = function(method) {
+      activeMethod = method;
+      const modal = document.getElementById('checkout-modal');
+      const box = document.getElementById('modal-brand-box');
+      const logo = document.getElementById('modal-brand-logo');
+      const title = document.getElementById('modal-brand-title');
+      const submitBtn = document.getElementById('modal-submit-btn');
+
+      if (method === 'bkash') {
+        box.className = "w-10 h-10 rounded-xl p-1.5 flex items-center justify-center bg-[#E2136E]/20 border border-[#E2136E]/40";
+        logo.src = "https://freelogopng.com/images/all_img/1656234841bkash-icon-png.png";
+        title.innerText = "bKash Payment Gateway";
+        submitBtn.className = "w-full py-3.5 rounded-2xl bg-[#E2136E] text-white font-extrabold text-xs";
+      } else {
+        box.className = "w-10 h-10 rounded-xl p-1.5 flex items-center justify-center bg-[#F7941D]/20 border border-[#F7941D]/40";
+        logo.src = "https://freelogopng.com/images/all_img/1679248787Nagad-Logo.png";
+        title.innerText = "Nagad Payment Gateway";
+        submitBtn.className = "w-full py-3.5 rounded-2xl bg-[#F7941D] text-black font-extrabold text-xs";
+      }
+
+      modal.classList.remove('hidden');
+    };
+
+    window.closeCheckoutModal = function() { document.getElementById('checkout-modal').classList.add('hidden'); };
+    window.copyModalNumber = function() {
+      const num = document.getElementById('modal-admin-num').innerText.trim();
+      navigator.clipboard.writeText(num).then(() => showToast('নম্বর কপি হয়েছে: ' + num));
+    };
+
+    window.handleModalFile = function(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          compressedScreenshotBase64 = e.target.result;
+          const preview = document.getElementById('modal-screen-preview');
+          preview.src = compressedScreenshotBase64;
+          preview.classList.remove('hidden');
+          showToast('ছবি যুক্ত হয়েছে');
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    };
+
+    window.submitModalDeposit = async function() {
+      const phone = document.getElementById('modal-sender-phone').value.trim();
+      const trx = document.getElementById('modal-sender-trx').value.trim();
+      if (!phone || phone.length < 11 || !trx) {
+        showToast('মোবাইল নম্বর ও TrxID দিন!', 'fa-circle-xmark');
+        return;
+      }
+      const submitBtn = document.getElementById('modal-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = "আপলোড হচ্ছে...";
+
+      try {
+        const liveImageUrl = compressedScreenshotBase64 ? await uploadImageToImgBB(compressedScreenshotBase64) : "";
+        await addDoc(collection(db, "deposits"), {
+          userId: activeUserId,
+          royalId: activeUser.royal_id || activeUserId,
+          userName: activeUser.name || "Member",
+          senderNumber: phone,
+          trxId: trx,
+          method: activeMethod,
+          amount: activationFeeAmount,
+          screenshotImage: liveImageUrl,
+          status: "pending",
+          createdAt: serverTimestamp()
+        });
+        showToast('ডিপোজিট রিকোয়েস্ট সফলভাবে জমা হয়েছে!');
+        closeCheckoutModal();
+        setTimeout(() => location.href = 'index.html', 1500);
+      } catch (err) {
+        showToast('ব্যর্থ হয়েছে, আবার চেষ্টা করুন');
+        submitBtn.disabled = false;
+        submitBtn.innerText = "SUBMIT PAYMENT REQUEST";
+      }
+    };
+
+    window.openLoanModal = function() { document.getElementById('loan-modal').classList.remove('hidden'); };
+    window.closeLoanModal = function() { document.getElementById('loan-modal').classList.add('hidden'); };
+    window.toggleAgreementCheckbox = function() {
+      const chk = document.getElementById('loan-agree-checkbox');
+      chk.checked = !chk.checked;
+      handleCheckboxChange(chk);
+    };
+    window.handleCheckboxChange = function(chk) {
+      const btn = document.getElementById('btn-confirm-loan');
+      btn.disabled = !chk.checked;
+      btn.className = chk.checked ? "py-2.5 rounded-xl bg-gradient-to-r from-gold-600 to-gold-400 text-black font-extrabold text-xs cursor-pointer" : "py-2.5 rounded-xl bg-gradient-to-r from-gold-600 to-gold-400 text-black font-extrabold text-xs opacity-40 cursor-not-allowed";
+    };
+
+    window.confirmLoanAction = async function() {
+      const btn = document.getElementById('btn-confirm-loan');
+      btn.disabled = true;
+      btn.innerText = "প্রসেসিং...";
+      try {
+        await updateDoc(doc(db, "users", activeUserId), {
+          account_status: "loan",
+          loan_remaining: 35.00,
+          activatedAt: serverTimestamp()
+        });
+        await handleActivationReferralReward(activeUserId, 'loan');
+        showToast('৩৫.০০ টাকা লোন নিয়ে একাউন্ট সক্রিয় হয়েছে!');
+        closeLoanModal();
+        setTimeout(() => location.href = 'index.html', 1500);
+      } catch (err) {
+        showToast('লোন প্রসেসিং ব্যর্থ হয়েছে');
+        btn.disabled = false;
+        btn.innerText = "লোন গ্রহণ করুন";
+      }
+    };
+
+    let toastTimer = null;
+    window.showToast = function(msg, icon = 'fa-circle-check') {
+      const toast = document.getElementById('royal-toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+      if (!toast) return;
+      toastMsg.innerText = msg;
+      toastIcon.className = `fa-solid ${icon} text-gold-400 text-xs`;
+      clearTimeout(toastTimer);
+      toast.classList.remove('opacity-0', '-translate-y-8', 'pointer-events-none');
+      toast.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+        toast.classList.add('opacity-0', '-translate-y-8', 'pointer-events-none');
+      }, 2200);
+    };
+
+    document.addEventListener('DOMContentLoaded', initActivationPage);
+  </script>
+</body>
+</html>
